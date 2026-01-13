@@ -2,9 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Master\UnitController;
-// nanti nambah:
-// use App\Http\Controllers\Api\Master\BrandController;
-// use App\Http\Controllers\Api\Master\CategoryController;
+use App\Http\Controllers\Api\Master\BrandController;
+use App\Http\Controllers\Api\Master\CategoryController;
+
 
 Route::get('/ping', function () {
     return response()->json([
@@ -23,9 +23,10 @@ Route::prefix('master')->group(function () {
     Route::apiResource('units', UnitController::class);
 
     // Brands
-   
+    Route::apiResource('brands', BrandController::class);
 
     // Categories
+    Route::apiResource('categories', CategoryController::class);
    
 
 });
