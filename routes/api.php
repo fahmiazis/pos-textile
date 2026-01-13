@@ -1,9 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\Master\UnitController;
-use App\Http\Controllers\Api\Master\BrandController;
-use App\Http\Controllers\Api\Master\CategoryController;
 
 
 Route::get('/ping', function () {
@@ -12,11 +9,18 @@ Route::get('/ping', function () {
     ]);
 });
 
+
 /*
 |--------------------------------------------------------------------------
 | MASTER DATA
 |--------------------------------------------------------------------------
 */
+
+use App\Http\Controllers\Api\Master\UnitController;
+use App\Http\Controllers\Api\Master\BrandController;
+use App\Http\Controllers\Api\Master\CategoryController;
+use App\Http\Controllers\Api\Master\StoreController;
+
 Route::prefix('master')->group(function () {
 
     // Units
@@ -27,6 +31,9 @@ Route::prefix('master')->group(function () {
 
     // Categories
     Route::apiResource('categories', CategoryController::class);
+
+    // Stores
+     Route::apiResource('stores', StoreController::class);
    
 
 });
