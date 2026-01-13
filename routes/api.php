@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\Master\CategoryController;
 use App\Http\Controllers\Api\Master\StoreController;
 use App\Http\Controllers\Api\Master\CustomerController;
 use App\Http\Controllers\Api\Master\SupplierController;
+use App\Http\Controllers\Api\Master\ProductController;
 
 Route::prefix('master')->group(function () {
 
@@ -42,5 +43,8 @@ Route::prefix('master')->group(function () {
 
     // Suppliers
     Route::apiResource('suppliers', SupplierController::class);
+
+    // Products
+    Route::apiResource('products', ProductController::class);
 
 });
