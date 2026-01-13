@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\Master\UnitController;
 use App\Http\Controllers\Api\Master\BrandController;
 use App\Http\Controllers\Api\Master\CategoryController;
 use App\Http\Controllers\Api\Master\StoreController;
+use App\Http\Controllers\Api\Master\CustomerController;
 
 Route::prefix('master')->group(function () {
 
@@ -35,5 +36,7 @@ Route::prefix('master')->group(function () {
     // Stores
      Route::apiResource('stores', StoreController::class);
    
+    // Customers
+     Route::apiResource('customers', CustomerController::class);
 
 });
