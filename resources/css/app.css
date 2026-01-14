@@ -1,3 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@layer theme, custom-base, custom-components, custom-utilities;
+@import "../../node_modules/tailwindcss/theme.css" layer(theme);
+@import "../../node_modules/tailwindcss/preflight.css" layer(custom-base);
+@import "../../node_modules/tailwindcss/utilities.css" layer(custom-utilities);
