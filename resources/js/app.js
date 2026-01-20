@@ -1,6 +1,3 @@
-// import '../css/app.css';
-// import './bootstrap';
-
 import '@/assets/tailwind.css';
 import '@/assets/styles.scss';
 
@@ -17,7 +14,7 @@ import ToastService from 'primevue/toastservice';
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 createInertiaApp({
-    title: (title) => `${title} - ${appName}`,
+    title: () => `${appName}`,
     resolve: (name) =>
         resolvePageComponent(
             `./Pages/${name}.vue`,
