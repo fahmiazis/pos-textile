@@ -124,6 +124,7 @@ Route::middleware('api.auth')->group(function () {
         Route::middleware('permission:driver.create')->post('/drivers', [DriverController::class, 'store']);
         Route::middleware('permission:driver.update')->put('/drivers/{driver}', [DriverController::class, 'update']);
         Route::middleware('permission:driver.delete')->delete('/drivers/{driver}', [DriverController::class, 'destroy']);
+        Route::middleware('permission:driver.update')->put('/drivers/{driver}/restore', [DriverController::class, 'restore']);
     });
 });
 

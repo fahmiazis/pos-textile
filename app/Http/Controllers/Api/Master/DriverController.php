@@ -3,15 +3,19 @@
 namespace App\Http\Controllers\Api\Master;
 
 use App\Http\Controllers\Controller;
-use App\Models\Master\Driver;
+use App\Services\Master\DriverService;
 use Illuminate\Http\Request;
 
 class DriverController extends Controller
 {
-    // GET /api/master/drivers (pagination 10)
-    public function index()
+    public function __construct(
+        protected DriverService $driverService
+    ) {}
+
+    // GET /api/master/drivers
+    public function index(Request $request)
     {
-        $drivers = Driver::orderBy('id', 'desc')->paginate(10);
+        $drivers = $this->driverService->paginate($request->all());
 
         return response()->json([
             'success' => true,
@@ -30,7 +34,7 @@ class DriverController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $driver = Driver::create($validated);
+        $driver = $this->driverService->create($validated);
 
         return response()->json([
             'success' => true,
@@ -39,10 +43,10 @@ class DriverController extends Controller
         ], 201);
     }
 
-    // GET /api/master/drivers/{id} (preview)
+    // GET /api/master/drivers/{id}
     public function show($id)
     {
-        $driver = Driver::findOrFail($id);
+        $driver = $this->driverService->find($id);
 
         return response()->json([
             'success' => true,
@@ -54,8 +58,6 @@ class DriverController extends Controller
     // PUT /api/master/drivers/{id}
     public function update(Request $request, $id)
     {
-        $driver = Driver::findOrFail($id);
-
         $validated = $request->validate([
             'name' => 'required|string|max:100',
             'phone' => 'nullable|string|max:20',
@@ -63,7 +65,7 @@ class DriverController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $driver->update($validated);
+        $driver = $this->driverService->update($id, $validated);
 
         return response()->json([
             'success' => true,
@@ -72,15 +74,26 @@ class DriverController extends Controller
         ]);
     }
 
-    // DELETE /api/master/drivers/{id}
+    // DELETE /api/master/drivers/{id} (soft delete)
     public function destroy($id)
     {
-        $driver = Driver::findOrFail($id);
-        $driver->delete();
+        $this->driverService->delete($id);
 
         return response()->json([
             'success' => true,
             'message' => 'Driver deleted successfully',
+        ]);
+    }
+
+    // PUT /api/master/drivers/{id}/restore
+    public function restore($id)
+    {
+        $driver = $this->driverService->restore($id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Driver restored successfully',
+            'data' => $driver,
         ]);
     }
 }
