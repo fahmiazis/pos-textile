@@ -11,8 +11,7 @@ class CategoryController extends Controller
     // GET /api/master/categories (pagination 10)
     public function index()
     {
-        $categories = Category::with('parent')
-            ->orderBy('id', 'desc')
+        $categories = Category::orderBy('id', 'desc')
             ->paginate(10);
 
         return response()->json([
@@ -28,7 +27,6 @@ class CategoryController extends Controller
         $validated = $request->validate([
             'code' => 'required|string|max:20|unique:categories,code',
             'name' => 'required|string|max:100',
-            'parent_id' => 'nullable|exists:categories,id',
             'is_active' => 'boolean',
         ]);
 
@@ -44,7 +42,7 @@ class CategoryController extends Controller
     // GET /api/master/categories/{id} (preview / detail)
     public function show($id)
     {
-        $category = Category::with(['parent', 'children'])->findOrFail($id);
+        $category = Category::findOrFail($id);
 
         return response()->json([
             'success' => true,
@@ -61,7 +59,6 @@ class CategoryController extends Controller
         $validated = $request->validate([
             'code' => 'required|string|max:20|unique:categories,code,' . $category->id,
             'name' => 'required|string|max:100',
-            'parent_id' => 'nullable|exists:categories,id',
             'is_active' => 'boolean',
         ]);
 
