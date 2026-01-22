@@ -96,7 +96,8 @@ Route::middleware('api.auth')->group(function () {
         Route::middleware('permission:supplier.create')->post('/suppliers', [SupplierController::class, 'store']);
         Route::middleware('permission:supplier.update')->put('/suppliers/{supplier}', [SupplierController::class, 'update']);
         Route::middleware('permission:supplier.delete')->delete('/suppliers/{supplier}', [SupplierController::class, 'destroy']);
-
+        Route::middleware('permission:supplier.update')->put('/suppliers/{supplier}/restore', [SupplierController::class, 'restore']);
+       
         /* ====== PRODUCTS ====== */
         Route::middleware('permission:product.view')->get('/products', [ProductController::class, 'index']);
         Route::middleware('permission:product.view')->get('/products/{product}', [ProductController::class, 'show']);
