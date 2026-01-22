@@ -87,6 +87,7 @@ Route::middleware('api.auth')->group(function () {
         Route::middleware('permission:customer.create')->post('/customers', [CustomerController::class, 'store']);
         Route::middleware('permission:customer.update')->put('/customers/{customer}', [CustomerController::class, 'update']);
         Route::middleware('permission:customer.delete')->delete('/customers/{customer}', [CustomerController::class, 'destroy']);
+        Route::middleware('permission:customer.update')->put('/customers/{customer}/restore', [CustomerController::class, 'restore']);
 
         /* ====== SUPPLIERS ====== */
         Route::middleware('permission:supplier.view')->get('/suppliers', [SupplierController::class, 'index']);
