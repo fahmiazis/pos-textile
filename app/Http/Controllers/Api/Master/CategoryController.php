@@ -3,16 +3,19 @@
 namespace App\Http\Controllers\Api\Master;
 
 use App\Http\Controllers\Controller;
-use App\Models\Master\Category;
+use App\Services\Master\CategoryService;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    // GET /api/master/categories (pagination 10)
-    public function index()
+    public function __construct(
+        protected CategoryService $categoryService
+    ) {}
+
+    // GET /api/master/categories
+    public function index(Request $request)
     {
-        $categories = Category::orderBy('id', 'desc')
-            ->paginate(10);
+        $categories = $this->categoryService->paginate($request->all());
 
         return response()->json([
             'success' => true,
@@ -30,7 +33,7 @@ class CategoryController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $category = Category::create($validated);
+        $category = $this->categoryService->create($validated);
 
         return response()->json([
             'success' => true,
@@ -39,10 +42,10 @@ class CategoryController extends Controller
         ], 201);
     }
 
-    // GET /api/master/categories/{id} (preview / detail)
+    // GET /api/master/categories/{id}
     public function show($id)
     {
-        $category = Category::findOrFail($id);
+        $category = $this->categoryService->find($id);
 
         return response()->json([
             'success' => true,
@@ -54,15 +57,13 @@ class CategoryController extends Controller
     // PUT /api/master/categories/{id}
     public function update(Request $request, $id)
     {
-        $category = Category::findOrFail($id);
-
         $validated = $request->validate([
-            'code' => 'required|string|max:20|unique:categories,code,' . $category->id,
+            'code' => 'required|string|max:20|unique:categories,code,' . $id,
             'name' => 'required|string|max:100',
             'is_active' => 'boolean',
         ]);
 
-        $category->update($validated);
+        $category = $this->categoryService->update($id, $validated);
 
         return response()->json([
             'success' => true,
@@ -71,15 +72,26 @@ class CategoryController extends Controller
         ]);
     }
 
-    // DELETE /api/master/categories/{id}
+    // DELETE /api/master/categories/{id} (soft delete)
     public function destroy($id)
     {
-        $category = Category::findOrFail($id);
-        $category->delete();
+        $this->categoryService->delete($id);
 
         return response()->json([
             'success' => true,
             'message' => 'Category deleted successfully',
+        ]);
+    }
+
+    // PUT /api/master/categories/{id}/restore
+    public function restore($id)
+    {
+        $category = $this->categoryService->restore($id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Category restored successfully',
+            'data' => $category,
         ]);
     }
 }
