@@ -3,15 +3,19 @@
 namespace App\Http\Controllers\Api\Master;
 
 use App\Http\Controllers\Controller;
-use App\Models\Master\Vehicle;
+use App\Services\Master\VehicleService;
 use Illuminate\Http\Request;
 
 class VehicleController extends Controller
 {
-    // GET /api/master/vehicles (pagination 10)
-    public function index()
+    public function __construct(
+        protected VehicleService $vehicleService
+    ) {}
+
+    // GET /api/master/vehicles
+    public function index(Request $request)
     {
-        $vehicles = Vehicle::orderBy('id', 'desc')->paginate(10);
+        $vehicles = $this->vehicleService->paginate($request->all());
 
         return response()->json([
             'success' => true,
@@ -30,7 +34,7 @@ class VehicleController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $vehicle = Vehicle::create($validated);
+        $vehicle = $this->vehicleService->create($validated);
 
         return response()->json([
             'success' => true,
@@ -39,10 +43,10 @@ class VehicleController extends Controller
         ], 201);
     }
 
-    // GET /api/master/vehicles/{id} (preview)
+    // GET /api/master/vehicles/{id}
     public function show($id)
     {
-        $vehicle = Vehicle::findOrFail($id);
+        $vehicle = $this->vehicleService->find($id);
 
         return response()->json([
             'success' => true,
@@ -54,16 +58,14 @@ class VehicleController extends Controller
     // PUT /api/master/vehicles/{id}
     public function update(Request $request, $id)
     {
-        $vehicle = Vehicle::findOrFail($id);
-
         $validated = $request->validate([
-            'plate_number' => 'required|string|max:15|unique:vehicles,plate_number,' . $vehicle->id,
+            'plate_number' => 'required|string|max:15|unique:vehicles,plate_number,' . $id,
             'vehicle_type' => 'required|in:TRUCK,PICKUP',
             'capacity_meter' => 'nullable|numeric|min:0',
             'is_active' => 'boolean',
         ]);
 
-        $vehicle->update($validated);
+        $vehicle = $this->vehicleService->update($id, $validated);
 
         return response()->json([
             'success' => true,
@@ -72,15 +74,26 @@ class VehicleController extends Controller
         ]);
     }
 
-    // DELETE /api/master/vehicles/{id}
+    // DELETE /api/master/vehicles/{id} (soft delete)
     public function destroy($id)
     {
-        $vehicle = Vehicle::findOrFail($id);
-        $vehicle->delete();
+        $this->vehicleService->delete($id);
 
         return response()->json([
             'success' => true,
             'message' => 'Vehicle deleted successfully',
+        ]);
+    }
+
+    // PUT /api/master/vehicles/{id}/restore
+    public function restore($id)
+    {
+        $vehicle = $this->vehicleService->restore($id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Vehicle restored successfully',
+            'data' => $vehicle,
         ]);
     }
 }

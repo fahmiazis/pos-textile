@@ -121,6 +121,7 @@ Route::middleware('api.auth')->group(function () {
         Route::middleware('permission:vehicle.create')->post('/vehicles', [VehicleController::class, 'store']);
         Route::middleware('permission:vehicle.update')->put('/vehicles/{vehicle}', [VehicleController::class, 'update']);
         Route::middleware('permission:vehicle.delete')->delete('/vehicles/{vehicle}', [VehicleController::class, 'destroy']);
+        Route::middleware('permission:vehicle.update')->put('/vehicles/{vehicle}/restore', [VehicleController::class, 'restore']);
 
         /* ====== DRIVERS ====== */
         Route::middleware('permission:driver.view')->get('/drivers', [DriverController::class, 'index']);
