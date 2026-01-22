@@ -3,15 +3,18 @@
 namespace App\Http\Controllers\Api\Master;
 
 use App\Http\Controllers\Controller;
-use App\Models\Master\Brand;
+use App\Services\Master\BrandService;
 use Illuminate\Http\Request;
 
 class BrandController extends Controller
 {
-    // GET /api/master/brands (pagination 10)
-    public function index()
+    public function __construct(
+        protected BrandService $brandService
+    ) {}
+
+    public function index(Request $request)
     {
-        $brands = Brand::orderBy('id', 'desc')->paginate(10);
+        $brands = $this->brandService->paginate($request->all());
 
         return response()->json([
             'success' => true,
@@ -20,7 +23,6 @@ class BrandController extends Controller
         ]);
     }
 
-    // POST /api/master/brands
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -30,7 +32,7 @@ class BrandController extends Controller
             'is_activated' => 'boolean',
         ]);
 
-        $brand = Brand::create($validated);
+        $brand = $this->brandService->create($validated);
 
         return response()->json([
             'success' => true,
@@ -39,10 +41,9 @@ class BrandController extends Controller
         ], 201);
     }
 
-    // GET /api/master/brands/{id} (preview)
     public function show($id)
     {
-        $brand = Brand::findOrFail($id);
+        $brand = $this->brandService->find($id);
 
         return response()->json([
             'success' => true,
@@ -51,19 +52,16 @@ class BrandController extends Controller
         ]);
     }
 
-    // PUT /api/master/brands/{id}
     public function update(Request $request, $id)
     {
-        $brand = Brand::findOrFail($id);
-
         $validated = $request->validate([
-            'code' => 'required|string|max:10|unique:brands,code,' . $brand->id,
+            'code' => 'required|string|max:10|unique:brands,code,' . $id,
             'name' => 'required|string|max:100',
             'description' => 'nullable|string|max:150',
             'is_activated' => 'boolean',
         ]);
 
-        $brand->update($validated);
+        $brand = $this->brandService->update($id, $validated);
 
         return response()->json([
             'success' => true,
@@ -72,15 +70,23 @@ class BrandController extends Controller
         ]);
     }
 
-    // DELETE /api/master/brands/{id}
     public function destroy($id)
     {
-        $brand = Brand::findOrFail($id);
-        $brand->delete();
+        $this->brandService->delete($id);
 
         return response()->json([
             'success' => true,
             'message' => 'Brand deleted successfully',
+        ]);
+    }
+
+    public function restore($id)
+    {
+        $this->brandService->restore($id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Brand restored successfully',
         ]);
     }
 }

@@ -64,6 +64,7 @@ Route::middleware('api.auth')->group(function () {
         Route::middleware('permission:brand.create')->post('/brands', [BrandController::class, 'store']);
         Route::middleware('permission:brand.update')->put('/brands/{brand}', [BrandController::class, 'update']);
         Route::middleware('permission:brand.delete')->delete('/brands/{brand}', [BrandController::class, 'destroy']);
+        Route::middleware('permission:brand.update')->put('/brands/{brand}/restore', [BrandController::class, 'restore']);
 
         /* ====== CATEGORIES ====== */
         Route::middleware('permission:category.view')->get('/categories', [CategoryController::class, 'index']);
