@@ -26,6 +26,8 @@ class RolePermissionSeeder extends Seeder
             'discount',
             'vehicle',
             'driver',
+            'brand',
+            'unit',
         ];
 
         $actions = ['view', 'create', 'update', 'delete'];
