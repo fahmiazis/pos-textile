@@ -3,15 +3,19 @@
 namespace App\Http\Controllers\Api\Master;
 
 use App\Http\Controllers\Controller;
-use App\Models\Master\Store;
+use App\Services\Master\StoreService;
 use Illuminate\Http\Request;
 
 class StoreController extends Controller
 {
-    // GET /api/master/stores (pagination 10)
-    public function index()
+    public function __construct(
+        protected StoreService $storeService
+    ) {}
+
+    // GET /api/master/stores
+    public function index(Request $request)
     {
-        $stores = Store::orderBy('id', 'desc')->paginate(10);
+        $stores = $this->storeService->paginate($request->all());
 
         return response()->json([
             'success' => true,
@@ -31,7 +35,7 @@ class StoreController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $store = Store::create($validated);
+        $store = $this->storeService->create($validated);
 
         return response()->json([
             'success' => true,
@@ -40,10 +44,10 @@ class StoreController extends Controller
         ], 201);
     }
 
-    // GET /api/master/stores/{id} (preview)
+    // GET /api/master/stores/{id}
     public function show($id)
     {
-        $store = Store::findOrFail($id);
+        $store = $this->storeService->find($id);
 
         return response()->json([
             'success' => true,
@@ -55,17 +59,15 @@ class StoreController extends Controller
     // PUT /api/master/stores/{id}
     public function update(Request $request, $id)
     {
-        $store = Store::findOrFail($id);
-
         $validated = $request->validate([
-            'code' => 'required|string|max:10|unique:stores,code,' . $store->id,
+            'code' => 'required|string|max:10|unique:stores,code,' . $id,
             'name' => 'required|string|max:100',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:255',
             'is_active' => 'boolean',
         ]);
 
-        $store->update($validated);
+        $store = $this->storeService->update($id, $validated);
 
         return response()->json([
             'success' => true,
@@ -74,15 +76,26 @@ class StoreController extends Controller
         ]);
     }
 
-    // DELETE /api/master/stores/{id}
+    // DELETE /api/master/stores/{id} (soft delete)
     public function destroy($id)
     {
-        $store = Store::findOrFail($id);
-        $store->delete();
+        $this->storeService->delete($id);
 
         return response()->json([
             'success' => true,
             'message' => 'Store deleted successfully',
+        ]);
+    }
+
+    // PUT /api/master/stores/{id}/restore
+    public function restore($id)
+    {
+        $store = $this->storeService->restore($id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Store restored successfully',
+            'data' => $store,
         ]);
     }
 }

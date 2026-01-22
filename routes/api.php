@@ -80,6 +80,7 @@ Route::middleware('api.auth')->group(function () {
         Route::middleware('permission:store.create')->post('/stores', [StoreController::class, 'store']);
         Route::middleware('permission:store.update')->put('/stores/{store}', [StoreController::class, 'update']);
         Route::middleware('permission:store.delete')->delete('/stores/{store}', [StoreController::class, 'destroy']);
+        Route::middleware('permission:store.update')->put('/stores/{store}/restore', [StoreController::class, 'restore']);
 
         /* ====== CUSTOMERS ====== */
         Route::middleware('permission:customer.view')->get('/customers', [CustomerController::class, 'index']);
