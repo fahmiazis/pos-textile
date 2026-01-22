@@ -3,15 +3,19 @@
 namespace App\Http\Controllers\Api\Master;
 
 use App\Http\Controllers\Controller;
-use App\Models\Master\Unit;
+use App\Services\Master\UnitService;
 use Illuminate\Http\Request;
 
 class UnitController extends Controller
 {
-    // GET /api/units (pagination 10)
-    public function index()
+    public function __construct(
+        protected UnitService $unitService
+    ) {}
+
+    // GET /api/master/units
+    public function index(Request $request)
     {
-        $units = Unit::orderBy('id', 'desc')->paginate(10);
+        $units = $this->unitService->paginate($request->all());
 
         return response()->json([
             'success' => true,
@@ -20,7 +24,7 @@ class UnitController extends Controller
         ]);
     }
 
-    // POST /api/units
+    // POST /api/master/units
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -31,7 +35,7 @@ class UnitController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $unit = Unit::create($validated);
+        $unit = $this->unitService->create($validated);
 
         return response()->json([
             'success' => true,
@@ -40,10 +44,10 @@ class UnitController extends Controller
         ], 201);
     }
 
-    // GET /api/units/{id} (preview / detail)
+    // GET /api/master/units/{id}
     public function show($id)
     {
-        $unit = Unit::with('baseUnit')->findOrFail($id);
+        $unit = $this->unitService->find($id);
 
         return response()->json([
             'success' => true,
@@ -52,20 +56,18 @@ class UnitController extends Controller
         ]);
     }
 
-    // PUT /api/units/{id}
+    // PUT /api/master/units/{id}
     public function update(Request $request, $id)
     {
-        $unit = Unit::findOrFail($id);
-
         $validated = $request->validate([
-            'code' => 'required|string|max:10|unique:units,code,' . $unit->id,
+            'code' => 'required|string|max:10|unique:units,code,' . $id,
             'name' => 'required|string|max:30',
             'base_unit_id' => 'nullable|exists:units,id',
             'multiplier' => 'required|numeric|min:0',
             'is_active' => 'boolean',
         ]);
 
-        $unit->update($validated);
+        $unit = $this->unitService->update($id, $validated);
 
         return response()->json([
             'success' => true,
@@ -74,15 +76,26 @@ class UnitController extends Controller
         ]);
     }
 
-    // DELETE /api/units/{id}
+    // DELETE /api/master/units/{id} (soft delete)
     public function destroy($id)
     {
-        $unit = Unit::findOrFail($id);
-        $unit->delete();
+        $this->unitService->delete($id);
 
         return response()->json([
             'success' => true,
             'message' => 'Unit deleted successfully',
+        ]);
+    }
+
+    // PUT /api/master/units/{id}/restore
+    public function restore($id)
+    {
+        $unit = $this->unitService->restore($id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Unit restored successfully',
+            'data' => $unit,
         ]);
     }
 }

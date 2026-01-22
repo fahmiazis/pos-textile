@@ -57,6 +57,7 @@ Route::middleware('api.auth')->group(function () {
         Route::middleware('permission:unit.create')->post('/units', [UnitController::class, 'store']);
         Route::middleware('permission:unit.update')->put('/units/{unit}', [UnitController::class, 'update']);
         Route::middleware('permission:unit.delete')->delete('/units/{unit}', [UnitController::class, 'destroy']);
+        Route::middleware('permission:unit.update')->put('/units/{unit}/restore', [UnitController::class, 'restore']);
 
         /* ====== BRANDS ====== */
         Route::middleware('permission:brand.view')->get('/brands', [BrandController::class, 'index']);
@@ -97,7 +98,7 @@ Route::middleware('api.auth')->group(function () {
         Route::middleware('permission:supplier.update')->put('/suppliers/{supplier}', [SupplierController::class, 'update']);
         Route::middleware('permission:supplier.delete')->delete('/suppliers/{supplier}', [SupplierController::class, 'destroy']);
         Route::middleware('permission:supplier.update')->put('/suppliers/{supplier}/restore', [SupplierController::class, 'restore']);
-       
+
         /* ====== PRODUCTS ====== */
         Route::middleware('permission:product.view')->get('/products', [ProductController::class, 'index']);
         Route::middleware('permission:product.view')->get('/products/{product}', [ProductController::class, 'show']);
