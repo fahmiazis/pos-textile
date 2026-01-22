@@ -109,6 +109,7 @@ Route::middleware('api.auth')->group(function () {
         Route::middleware('permission:discount.create')->post('/discounts', [DiscountController::class, 'store']);
         Route::middleware('permission:discount.update')->put('/discounts/{discount}', [DiscountController::class, 'update']);
         Route::middleware('permission:discount.delete')->delete('/discounts/{discount}', [DiscountController::class, 'destroy']);
+        Route::middleware('permission:discount.update')->put('/discounts/{discount}/restore', [DiscountController::class, 'restore']);
 
         /* ====== VEHICLES ====== */
         Route::middleware('permission:vehicle.view')->get('/vehicles', [VehicleController::class, 'index']);
