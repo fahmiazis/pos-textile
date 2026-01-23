@@ -3,6 +3,7 @@
 namespace App\Services\Master;
 
 use App\Models\Master\Product;
+use Illuminate\Support\Facades\DB;
 
 class ProductService
 {
@@ -61,21 +62,41 @@ class ProductService
         return $product;
     }
 
-    /** soft delete */
+    /**
+     * Soft delete + set inactive
+     */
     public function delete(int $id)
     {
-        $product = Product::findOrFail($id);
-        $product->delete();
+        return DB::transaction(function () use ($id) {
+            $product = Product::findOrFail($id);
+
+            $product->update([
+                'is_active' => false,
+            ]);
+
+            $product->delete();
+
+            return $product;
+        });
     }
 
-    /** restore */
+    /**
+     * Restore + set active
+     */
     public function restore(int $id)
     {
-        $product = Product::withTrashed()
-            ->with(['brand', 'category', 'baseUnit'])
-            ->findOrFail($id);
+        return DB::transaction(function () use ($id) {
+            $product = Product::withTrashed()
+                ->with(['brand', 'category', 'baseUnit'])
+                ->findOrFail($id);
 
-        $product->restore();
-        return $product;
+            $product->restore();
+
+            $product->update([
+                'is_active' => true,
+            ]);
+
+            return $product;
+        });
     }
 }
