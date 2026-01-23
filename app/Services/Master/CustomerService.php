@@ -3,6 +3,7 @@
 namespace App\Services\Master;
 
 use App\Models\Master\Customer;
+use Illuminate\Support\Facades\DB;
 
 class CustomerService
 {
@@ -57,21 +58,41 @@ class CustomerService
         return $customer;
     }
 
-    /** soft delete */
+    /**
+     * Soft delete + set inactive
+     */
     public function delete(int $id)
     {
-        $customer = Customer::findOrFail($id);
-        $customer->delete();
+        return DB::transaction(function () use ($id) {
+            $customer = Customer::findOrFail($id);
+
+            $customer->update([
+                'is_active' => false,
+            ]);
+
+            $customer->delete();
+
+            return $customer;
+        });
     }
 
-    /** restore */
+    /**
+     * Restore + set active
+     */
     public function restore(int $id)
     {
-        $customer = Customer::withTrashed()
-            ->with('defaultStore')
-            ->findOrFail($id);
+        return DB::transaction(function () use ($id) {
+            $customer = Customer::withTrashed()
+                ->with('defaultStore')
+                ->findOrFail($id);
 
-        $customer->restore();
-        return $customer;
+            $customer->restore();
+
+            $customer->update([
+                'is_active' => true,
+            ]);
+
+            return $customer;
+        });
     }
 }
