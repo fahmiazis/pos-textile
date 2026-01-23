@@ -3,6 +3,7 @@
 namespace App\Services\Master;
 
 use App\Models\Master\Unit;
+use Illuminate\Support\Facades\DB;
 
 class UnitService
 {
@@ -51,21 +52,41 @@ class UnitService
         return $unit;
     }
 
-    /** soft delete */
+    /**
+     * Soft delete + set inactive
+     */
     public function delete(int $id)
     {
-        $unit = Unit::findOrFail($id);
-        $unit->delete();
+        return DB::transaction(function () use ($id) {
+            $unit = Unit::findOrFail($id);
+
+            $unit->update([
+                'is_active' => false,
+            ]);
+
+            $unit->delete();
+
+            return $unit;
+        });
     }
 
-    /** restore */
+    /**
+     * Restore + set active
+     */
     public function restore(int $id)
     {
-        $unit = Unit::withTrashed()
-            ->with('baseUnit')
-            ->findOrFail($id);
+        return DB::transaction(function () use ($id) {
+            $unit = Unit::withTrashed()
+                ->with('baseUnit')
+                ->findOrFail($id);
 
-        $unit->restore();
-        return $unit;
+            $unit->restore();
+
+            $unit->update([
+                'is_active' => true,
+            ]);
+
+            return $unit;
+        });
     }
 }
