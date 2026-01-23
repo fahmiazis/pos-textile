@@ -3,17 +3,19 @@
 namespace App\Http\Controllers\Api\Master;
 
 use App\Http\Controllers\Controller;
-use App\Models\Master\Discount;
+use App\Services\Master\DiscountService;
 use Illuminate\Http\Request;
 
 class DiscountController extends Controller
 {
-    // GET /api/master/discounts (pagination 10)
-    public function index()
+    public function __construct(
+        protected DiscountService $discountService
+    ) {}
+
+    // GET /api/master/discounts
+    public function index(Request $request)
     {
-        $discounts = Discount::with('store')
-            ->orderBy('id', 'desc')
-            ->paginate(10);
+        $discounts = $this->discountService->paginate($request->all());
 
         return response()->json([
             'success' => true,
@@ -36,7 +38,7 @@ class DiscountController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $discount = Discount::create($validated);
+        $discount = $this->discountService->create($validated);
 
         return response()->json([
             'success' => true,
@@ -45,10 +47,10 @@ class DiscountController extends Controller
         ], 201);
     }
 
-    // GET /api/master/discounts/{id} (preview)
+    // GET /api/master/discounts/{id}
     public function show($id)
     {
-        $discount = Discount::with('store')->findOrFail($id);
+        $discount = $this->discountService->find($id);
 
         return response()->json([
             'success' => true,
@@ -60,10 +62,8 @@ class DiscountController extends Controller
     // PUT /api/master/discounts/{id}
     public function update(Request $request, $id)
     {
-        $discount = Discount::findOrFail($id);
-
         $validated = $request->validate([
-            'code' => 'required|string|max:20|unique:discounts,code,' . $discount->id,
+            'code' => 'required|string|max:20|unique:discounts,code,' . $id,
             'name' => 'required|string|max:100',
             'discount_type' => 'required|in:PERCENT,FIXED',
             'discount_value' => 'required|numeric|min:0',
@@ -73,7 +73,7 @@ class DiscountController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $discount->update($validated);
+        $discount = $this->discountService->update($id, $validated);
 
         return response()->json([
             'success' => true,
@@ -82,15 +82,26 @@ class DiscountController extends Controller
         ]);
     }
 
-    // DELETE /api/master/discounts/{id}
+    // DELETE /api/master/discounts/{id} (soft delete)
     public function destroy($id)
     {
-        $discount = Discount::findOrFail($id);
-        $discount->delete();
+        $this->discountService->delete($id);
 
         return response()->json([
             'success' => true,
             'message' => 'Discount deleted successfully',
+        ]);
+    }
+
+    // PUT /api/master/discounts/{id}/restore
+    public function restore($id)
+    {
+        $discount = $this->discountService->restore($id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Discount restored successfully',
+            'data' => $discount,
         ]);
     }
 }

@@ -3,17 +3,19 @@
 namespace App\Http\Controllers\Api\Master;
 
 use App\Http\Controllers\Controller;
-use App\Models\Master\Product;
+use App\Services\Master\ProductService;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    // GET /api/master/products (pagination 10)
-    public function index()
+    public function __construct(
+        protected ProductService $productService
+    ) {}
+
+    // GET /api/master/products
+    public function index(Request $request)
     {
-        $products = Product::with(['brand', 'category', 'baseUnit'])
-            ->orderBy('id', 'desc')
-            ->paginate(10);
+        $products = $this->productService->paginate($request->all());
 
         return response()->json([
             'success' => true,
@@ -35,7 +37,7 @@ class ProductController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $product = Product::create($validated);
+        $product = $this->productService->create($validated);
 
         return response()->json([
             'success' => true,
@@ -44,10 +46,10 @@ class ProductController extends Controller
         ], 201);
     }
 
-    // GET /api/master/products/{id} (preview)
+    // GET /api/master/products/{id}
     public function show($id)
     {
-        $product = Product::with(['brand', 'category', 'baseUnit'])->findOrFail($id);
+        $product = $this->productService->find($id);
 
         return response()->json([
             'success' => true,
@@ -59,10 +61,8 @@ class ProductController extends Controller
     // PUT /api/master/products/{id}
     public function update(Request $request, $id)
     {
-        $product = Product::findOrFail($id);
-
         $validated = $request->validate([
-            'sku' => 'required|string|max:30|unique:products,sku,' . $product->id,
+            'sku' => 'required|string|max:30|unique:products,sku,' . $id,
             'name' => 'required|string|max:150',
             'brand_id' => 'required|exists:brands,id',
             'category_id' => 'required|exists:categories,id',
@@ -71,7 +71,7 @@ class ProductController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $product->update($validated);
+        $product = $this->productService->update($id, $validated);
 
         return response()->json([
             'success' => true,
@@ -80,15 +80,26 @@ class ProductController extends Controller
         ]);
     }
 
-    // DELETE /api/master/products/{id}
+    // DELETE /api/master/products/{id} (soft delete)
     public function destroy($id)
     {
-        $product = Product::findOrFail($id);
-        $product->delete();
+        $this->productService->delete($id);
 
         return response()->json([
             'success' => true,
             'message' => 'Product deleted successfully',
+        ]);
+    }
+
+    // PUT /api/master/products/{id}/restore
+    public function restore($id)
+    {
+        $product = $this->productService->restore($id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Product restored successfully',
+            'data' => $product,
         ]);
     }
 }

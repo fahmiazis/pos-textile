@@ -3,17 +3,19 @@
 namespace App\Http\Controllers\Api\Master;
 
 use App\Http\Controllers\Controller;
-use App\Models\Master\Customer;
+use App\Services\Master\CustomerService;
 use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
-    // GET /api/master/customers (pagination 10)
-    public function index()
+    public function __construct(
+        protected CustomerService $customerService
+    ) {}
+
+    // GET /api/master/customers
+    public function index(Request $request)
     {
-        $customers = Customer::with('defaultStore')
-            ->orderBy('id', 'desc')
-            ->paginate(10);
+        $customers = $this->customerService->paginate($request->all());
 
         return response()->json([
             'success' => true,
@@ -35,7 +37,7 @@ class CustomerController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $customer = Customer::create($validated);
+        $customer = $this->customerService->create($validated);
 
         return response()->json([
             'success' => true,
@@ -44,10 +46,10 @@ class CustomerController extends Controller
         ], 201);
     }
 
-    // GET /api/master/customers/{id} (preview)
+    // GET /api/master/customers/{id}
     public function show($id)
     {
-        $customer = Customer::with('defaultStore')->findOrFail($id);
+        $customer = $this->customerService->find($id);
 
         return response()->json([
             'success' => true,
@@ -59,10 +61,8 @@ class CustomerController extends Controller
     // PUT /api/master/customers/{id}
     public function update(Request $request, $id)
     {
-        $customer = Customer::findOrFail($id);
-
         $validated = $request->validate([
-            'code' => 'required|string|max:20|unique:customers,code,' . $customer->id,
+            'code' => 'required|string|max:20|unique:customers,code,' . $id,
             'name' => 'required|string|max:150',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:255',
@@ -71,7 +71,7 @@ class CustomerController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $customer->update($validated);
+        $customer = $this->customerService->update($id, $validated);
 
         return response()->json([
             'success' => true,
@@ -80,15 +80,26 @@ class CustomerController extends Controller
         ]);
     }
 
-    // DELETE /api/master/customers/{id}
+    // DELETE /api/master/customers/{id} (soft delete)
     public function destroy($id)
     {
-        $customer = Customer::findOrFail($id);
-        $customer->delete();
+        $this->customerService->delete($id);
 
         return response()->json([
             'success' => true,
             'message' => 'Customer deleted successfully',
+        ]);
+    }
+
+    // PUT /api/master/customers/{id}/restore
+    public function restore($id)
+    {
+        $customer = $this->customerService->restore($id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Customer restored successfully',
+            'data' => $customer,
         ]);
     }
 }

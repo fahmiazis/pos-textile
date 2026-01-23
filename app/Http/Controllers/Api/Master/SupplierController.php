@@ -3,17 +3,19 @@
 namespace App\Http\Controllers\Api\Master;
 
 use App\Http\Controllers\Controller;
-use App\Models\Master\Supplier;
+use App\Services\Master\SupplierService;
 use Illuminate\Http\Request;
 
 class SupplierController extends Controller
 {
-    // GET /api/master/suppliers (pagination 10)
-    public function index()
+    public function __construct(
+        protected SupplierService $supplierService
+    ) {}
+
+    // GET /api/master/suppliers
+    public function index(Request $request)
     {
-        $suppliers = Supplier::with('defaultStore')
-            ->orderBy('id', 'desc')
-            ->paginate(10);
+        $suppliers = $this->supplierService->paginate($request->all());
 
         return response()->json([
             'success' => true,
@@ -35,7 +37,7 @@ class SupplierController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $supplier = Supplier::create($validated);
+        $supplier = $this->supplierService->create($validated);
 
         return response()->json([
             'success' => true,
@@ -44,10 +46,10 @@ class SupplierController extends Controller
         ], 201);
     }
 
-    // GET /api/master/suppliers/{id} (preview)
+    // GET /api/master/suppliers/{id}
     public function show($id)
     {
-        $supplier = Supplier::with('defaultStore')->findOrFail($id);
+        $supplier = $this->supplierService->find($id);
 
         return response()->json([
             'success' => true,
@@ -59,10 +61,8 @@ class SupplierController extends Controller
     // PUT /api/master/suppliers/{id}
     public function update(Request $request, $id)
     {
-        $supplier = Supplier::findOrFail($id);
-
         $validated = $request->validate([
-            'code' => 'required|string|max:20|unique:suppliers,code,' . $supplier->id,
+            'code' => 'required|string|max:20|unique:suppliers,code,' . $id,
             'name' => 'required|string|max:150',
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:255',
@@ -71,7 +71,7 @@ class SupplierController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $supplier->update($validated);
+        $supplier = $this->supplierService->update($id, $validated);
 
         return response()->json([
             'success' => true,
@@ -80,15 +80,26 @@ class SupplierController extends Controller
         ]);
     }
 
-    // DELETE /api/master/suppliers/{id}
+    // DELETE /api/master/suppliers/{id} (soft delete)
     public function destroy($id)
     {
-        $supplier = Supplier::findOrFail($id);
-        $supplier->delete();
+        $this->supplierService->delete($id);
 
         return response()->json([
             'success' => true,
             'message' => 'Supplier deleted successfully',
+        ]);
+    }
+
+    // PUT /api/master/suppliers/{id}/restore
+    public function restore($id)
+    {
+        $supplier = $this->supplierService->restore($id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Supplier restored successfully',
+            'data' => $supplier,
         ]);
     }
 }
