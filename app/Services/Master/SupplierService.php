@@ -3,6 +3,7 @@
 namespace App\Services\Master;
 
 use App\Models\Master\Supplier;
+use Illuminate\Support\Facades\DB;
 
 class SupplierService
 {
@@ -51,21 +52,41 @@ class SupplierService
         return $supplier;
     }
 
-    /** soft delete */
+    /**
+     * Soft delete + set inactive
+     */
     public function delete(int $id)
     {
-        $supplier = Supplier::findOrFail($id);
-        $supplier->delete();
+        return DB::transaction(function () use ($id) {
+            $supplier = Supplier::findOrFail($id);
+
+            $supplier->update([
+                'is_active' => false,
+            ]);
+
+            $supplier->delete();
+
+            return $supplier;
+        });
     }
 
-    /** restore */
+    /**
+     * Restore + set active
+     */
     public function restore(int $id)
     {
-        $supplier = Supplier::withTrashed()
-            ->with('defaultStore')
-            ->findOrFail($id);
+        return DB::transaction(function () use ($id) {
+            $supplier = Supplier::withTrashed()
+                ->with('defaultStore')
+                ->findOrFail($id);
 
-        $supplier->restore();
-        return $supplier;
+            $supplier->restore();
+
+            $supplier->update([
+                'is_active' => true,
+            ]);
+
+            return $supplier;
+        });
     }
 }
