@@ -3,6 +3,7 @@
 namespace App\Services\Master;
 
 use App\Models\Master\Store;
+use Illuminate\Support\Facades\DB;
 
 class StoreService
 {
@@ -46,18 +47,39 @@ class StoreService
         return $store;
     }
 
-    /** soft delete */
+    /**
+     * Soft delete + set inactive
+     */
     public function delete(int $id)
     {
-        $store = $this->find($id);
-        $store->delete();
+        return DB::transaction(function () use ($id) {
+            $store = Store::findOrFail($id);
+
+            $store->update([
+                'is_active' => false,
+            ]);
+
+            $store->delete();
+
+            return $store;
+        });
     }
 
-    /** restore */
+    /**
+     * Restore + set active
+     */
     public function restore(int $id)
     {
-        $store = Store::withTrashed()->findOrFail($id);
-        $store->restore();
-        return $store;
+        return DB::transaction(function () use ($id) {
+            $store = Store::withTrashed()->findOrFail($id);
+
+            $store->restore();
+
+            $store->update([
+                'is_active' => true,
+            ]);
+
+            return $store;
+        });
     }
 }
