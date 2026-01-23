@@ -3,6 +3,7 @@
 namespace App\Services\Master;
 
 use App\Models\Master\Discount;
+use Illuminate\Support\Facades\DB;
 
 class DiscountService
 {
@@ -66,21 +67,41 @@ class DiscountService
         return $discount;
     }
 
-    /** soft delete */
+    /**
+     * Soft delete + set inactive
+     */
     public function delete(int $id)
     {
-        $discount = Discount::findOrFail($id);
-        $discount->delete();
+        return DB::transaction(function () use ($id) {
+            $discount = Discount::findOrFail($id);
+
+            $discount->update([
+                'is_active' => false,
+            ]);
+
+            $discount->delete();
+
+            return $discount;
+        });
     }
 
-    /** restore */
+    /**
+     * Restore + set active
+     */
     public function restore(int $id)
     {
-        $discount = Discount::withTrashed()
-            ->with('store')
-            ->findOrFail($id);
+        return DB::transaction(function () use ($id) {
+            $discount = Discount::withTrashed()
+                ->with('store')
+                ->findOrFail($id);
 
-        $discount->restore();
-        return $discount;
+            $discount->restore();
+
+            $discount->update([
+                'is_active' => true,
+            ]);
+
+            return $discount;
+        });
     }
 }
