@@ -3,6 +3,7 @@
 namespace App\Services\Master;
 
 use App\Models\Master\Brand;
+use Illuminate\Support\Facades\DB;
 
 class BrandService
 {
@@ -10,24 +11,20 @@ class BrandService
     {
         $query = Brand::query();
 
-        // search
         if (!empty($params['search'])) {
             $search = $params['search'];
-            $query->where(function ($q) use ($search) {
+            $query->where(fn ($q) =>
                 $q->where('code', 'like', "%{$search}%")
-                    ->orWhere('name', 'like', "%{$search}%");
-            });
+                  ->orWhere('name', 'like', "%{$search}%")
+            );
         }
 
-        // filter active
         if (isset($params['is_active'])) {
             $query->where('is_active', $params['is_active']);
         }
 
-
-        return $query
-            ->orderBy('id', 'desc')
-            ->paginate($params['per_page'] ?? 10);
+        return $query->orderBy('id', 'desc')
+                     ->paginate($params['per_page'] ?? 10);
     }
 
     public function create(array $data)
@@ -47,14 +44,39 @@ class BrandService
         return $brand;
     }
 
+    /**
+     * Soft delete + set inactive
+     */
     public function delete(int $id)
     {
-        $brand = $this->find($id);
-        $brand->delete();
+        return DB::transaction(function () use ($id) {
+            $brand = Brand::findOrFail($id);
+
+            $brand->update([
+                'is_active' => false,
+            ]);
+
+            $brand->delete();
+
+            return $brand;
+        });
     }
 
+    /**
+     * Restore + set active
+     */
     public function restore(int $id)
     {
-        return Brand::withTrashed()->findOrFail($id)->restore();
+        return DB::transaction(function () use ($id) {
+            $brand = Brand::withTrashed()->findOrFail($id);
+
+            $brand->restore();
+
+            $brand->update([
+                'is_active' => true,
+            ]);
+
+            return $brand;
+        });
     }
 }
