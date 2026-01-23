@@ -3,6 +3,7 @@
 namespace App\Services\Master;
 
 use App\Models\Master\Vehicle;
+use Illuminate\Support\Facades\DB;
 
 class VehicleService
 {
@@ -48,18 +49,39 @@ class VehicleService
         return $vehicle;
     }
 
-    /** soft delete */
+    /**
+     * Soft delete + set inactive
+     */
     public function delete(int $id)
     {
-        $vehicle = Vehicle::findOrFail($id);
-        $vehicle->delete();
+        return DB::transaction(function () use ($id) {
+            $vehicle = Vehicle::findOrFail($id);
+
+            $vehicle->update([
+                'is_active' => false,
+            ]);
+
+            $vehicle->delete();
+
+            return $vehicle;
+        });
     }
 
-    /** restore */
+    /**
+     * Restore + set active
+     */
     public function restore(int $id)
     {
-        $vehicle = Vehicle::withTrashed()->findOrFail($id);
-        $vehicle->restore();
-        return $vehicle;
+        return DB::transaction(function () use ($id) {
+            $vehicle = Vehicle::withTrashed()->findOrFail($id);
+
+            $vehicle->restore();
+
+            $vehicle->update([
+                'is_active' => true,
+            ]);
+
+            return $vehicle;
+        });
     }
 }
