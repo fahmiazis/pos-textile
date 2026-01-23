@@ -3,6 +3,7 @@
 namespace App\Services\Master;
 
 use App\Models\Master\Driver;
+use Illuminate\Support\Facades\DB;
 
 class DriverService
 {
@@ -47,18 +48,39 @@ class DriverService
         return $driver;
     }
 
-    /** soft delete */
+    /**
+     * Soft delete + set inactive
+     */
     public function delete(int $id)
     {
-        $driver = Driver::findOrFail($id);
-        $driver->delete();
+        return DB::transaction(function () use ($id) {
+            $driver = Driver::findOrFail($id);
+
+            $driver->update([
+                'is_active' => false,
+            ]);
+
+            $driver->delete();
+
+            return $driver;
+        });
     }
 
-    /** restore */
+    /**
+     * Restore + set active
+     */
     public function restore(int $id)
     {
-        $driver = Driver::withTrashed()->findOrFail($id);
-        $driver->restore();
-        return $driver;
+        return DB::transaction(function () use ($id) {
+            $driver = Driver::withTrashed()->findOrFail($id);
+
+            $driver->restore();
+
+            $driver->update([
+                'is_active' => true,
+            ]);
+
+            return $driver;
+        });
     }
 }
