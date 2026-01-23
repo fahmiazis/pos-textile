@@ -3,6 +3,7 @@
 namespace App\Services\Master;
 
 use App\Models\Master\Category;
+use Illuminate\Support\Facades\DB;
 
 class CategoryService
 {
@@ -46,18 +47,39 @@ class CategoryService
         return $category;
     }
 
-    /** soft delete */
+    /**
+     * Soft delete + set inactive
+     */
     public function delete(int $id)
     {
-        $category = $this->find($id);
-        $category->delete();
+        return DB::transaction(function () use ($id) {
+            $category = Category::findOrFail($id);
+
+            $category->update([
+                'is_active' => false,
+            ]);
+
+            $category->delete();
+
+            return $category;
+        });
     }
 
-    /** restore */
+    /**
+     * Restore + set active
+     */
     public function restore(int $id)
     {
-        $category = Category::withTrashed()->findOrFail($id);
-        $category->restore();
-        return $category;
+        return DB::transaction(function () use ($id) {
+            $category = Category::withTrashed()->findOrFail($id);
+
+            $category->restore();
+
+            $category->update([
+                'is_active' => true,
+            ]);
+
+            return $category;
+        });
     }
 }
