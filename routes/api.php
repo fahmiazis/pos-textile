@@ -139,6 +139,19 @@ Route::middleware('api.auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 
+// use App\Http\Controllers\Api\Inventory\InventoryController;
+
+// Route::middleware('api.auth')->group(function () {
+
+//     Route::prefix('inventory')->group(function () {
+
+//         Route::middleware('permission:inventory.view')
+//             ->get('/availability', [InventoryController::class, 'availability']);
+
+//         Route::middleware('permission:inventory.view')
+//             ->get('/movements', [InventoryController::class, 'movements']);
+//     });
+// });
 
 /*
 |--------------------------------------------------------------------------
@@ -152,3 +165,31 @@ Route::middleware('api.auth')->group(function () {
 | Sales Orders 
 |--------------------------------------------------------------------------
 */
+
+use App\Http\Controllers\Api\Sales\SalesOrderController;
+use App\Http\Controllers\Api\Sales\BillingController;
+use App\Http\Controllers\Api\Sales\CollectionController;
+
+Route::middleware('api.auth')->group(function () {
+
+    Route::prefix('sales')->group(function () {
+
+        /* ====== SALES ORDERS ====== */
+        Route::middleware('permission:sales_order.create')
+            ->post('/orders', [SalesOrderController::class, 'store']);
+
+        Route::middleware('permission:sales_order.submit')
+            ->post('/orders/{id}/submit', [SalesOrderController::class, 'submit']);
+
+        Route::middleware('permission:sales_order.cancel')
+            ->post('/orders/{id}/cancel', [SalesOrderController::class, 'cancel']);
+
+        /* ====== BILLING ====== */
+        Route::middleware('permission:billing.create')
+            ->post('/billings', [BillingController::class, 'store']);
+
+        /* ====== COLLECTION ====== */
+        Route::middleware('permission:collection.create')
+            ->post('/collections', [CollectionController::class, 'store']);
+    });
+});
