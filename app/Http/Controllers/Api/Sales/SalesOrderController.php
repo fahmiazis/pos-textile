@@ -70,8 +70,8 @@ class SalesOrderController extends Controller
       'customer_id' => 'required|exists:customers,id',
       'order_date' => 'required|date',
       'notes' => 'nullable|string',
-      'source_document_type' => 'nullable|string|max:30',
-      'source_document_id'   => 'nullable|integer',
+      // 'source_document_type' => 'nullable|string|max:30',
+      // 'source_document_id'   => 'nullable|integer',
 
       'items' => 'required|array|min:1',
       'items.*.product_id' => 'required|exists:products,id',

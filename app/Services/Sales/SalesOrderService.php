@@ -33,8 +33,8 @@ class SalesOrderService
         'status'      => 'draft',
         'created_by'  => $userId,
         'notes'       => $data['notes'] ?? null,
-        'source_document_type' => $data['source_document_type'] ?? null,
-        'source_document_id'   => $data['source_document_id'] ?? null,
+        // 'source_document_type' => $data['source_document_type'] ?? null,
+        // 'source_document_id'   => $data['source_document_id'] ?? null,
       ]);
 
 

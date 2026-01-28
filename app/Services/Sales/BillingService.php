@@ -33,8 +33,8 @@ class BillingService
 
         'sales_order_id' => $salesOrder->id,
 
-        'source_document_type' => 'sales_order',
-        'source_document_id'   => $salesOrder->id,
+        // 'source_document_type' => 'sales_order',
+        // 'source_document_id'   => $salesOrder->id,
 
         'billing_date'   => now()->toDateString(),
         'total_amount'  => $salesOrder->total_amount,

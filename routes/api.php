@@ -205,3 +205,18 @@ Route::middleware('api.auth')->prefix('billings')->group(function () {
     Route::middleware('permission:billing.create')
         ->post('/', [BillingController::class, 'store']);
 });
+
+Route::post(
+    '/billings/{billing}/collect',
+    [\App\Http\Controllers\Api\Sales\CollectionController::class, 'store']
+);
+
+/*
+|--------------------------------------------------------------------------
+| Refunds
+|--------------------------------------------------------------------------
+*/
+Route::post(
+    '/sales-orders/{id}/refund/full',
+    [\App\Http\Controllers\Api\Sales\RefundController::class, 'full']
+);
