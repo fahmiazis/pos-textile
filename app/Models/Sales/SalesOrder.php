@@ -24,6 +24,8 @@ class SalesOrder extends Model
     'total_amount',
     'created_by',
     'notes',
+    'source_document_type',
+    'source_document_id',
   ];
 
   /*

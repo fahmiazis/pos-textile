@@ -15,9 +15,6 @@ class BillingController extends Controller
     $this->service = $service;
   }
 
-  /**
-   * Create Billing from Sales Order
-   */
   public function store(Request $request)
   {
     $data = $request->validate([
@@ -27,8 +24,32 @@ class BillingController extends Controller
     $billing = $this->service->createFromSalesOrder($data['sales_order_id']);
 
     return response()->json([
-      'message' => 'Billing created',
-      'data' => $billing
+      'success' => true,
+      'message' => 'Billing berhasil dibuat',
+      'data' => [
+        'billing_id' => $billing->id,
+        'billing_number' => $billing->billing_number,
+        'total_amount' => $billing->total_amount,
+        'status' => $billing->status,
+      ]
     ], 201);
+  }
+
+  public function index(Request $request)
+  {
+    $billings = $this->service->list([
+      'status' => $request->status
+    ]);
+
+    return response()->json([
+      'success' => true,
+      'meta' => [
+        'filters' => [
+          'status' => $request->status
+        ],
+        'total' => $billings->count()
+      ],
+      'data' => $billings
+    ]);
   }
 }

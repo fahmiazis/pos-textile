@@ -139,25 +139,20 @@ Route::middleware('api.auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 
-// use App\Http\Controllers\Api\Inventory\InventoryController;
+use App\Http\Controllers\Api\Inventory\InventoryController;
 
-// Route::middleware('api.auth')->group(function () {
+Route::middleware('api.auth')->group(function () {
 
-//     Route::prefix('inventory')->group(function () {
+    Route::prefix('inventory')->group(function () {
 
-//         Route::middleware('permission:inventory.view')
-//             ->get('/availability', [InventoryController::class, 'availability']);
+        Route::middleware('permission:inventory.view')
+            ->get('/availability', [InventoryController::class, 'availability']);
 
-//         Route::middleware('permission:inventory.view')
-//             ->get('/movements', [InventoryController::class, 'movements']);
-//     });
-// });
+        Route::middleware('permission:inventory.view')
+            ->get('/movements', [InventoryController::class, 'movements']);
+    });
+});
 
-/*
-|--------------------------------------------------------------------------
-| Purhase 
-|--------------------------------------------------------------------------
-*/
 
 
 /*
@@ -174,7 +169,11 @@ Route::middleware('api.auth')->group(function () {
 
     Route::prefix('sales')->group(function () {
 
-        /* ====== SALES ORDERS ====== */
+        Route::get('/orders/billable', [SalesOrderController::class, 'billable']);
+        Route::get('/orders', [SalesOrderController::class, 'index']);
+        Route::get('/orders/{id}', [SalesOrderController::class, 'show']);
+
+
         Route::middleware('permission:sales_order.create')
             ->post('/orders', [SalesOrderController::class, 'store']);
 
@@ -192,4 +191,17 @@ Route::middleware('api.auth')->group(function () {
         Route::middleware('permission:collection.create')
             ->post('/collections', [CollectionController::class, 'store']);
     });
+});
+
+/*
+|--------------------------------------------------------------------------
+| Purhase / Billing
+|--------------------------------------------------------------------------
+*/
+Route::middleware('api.auth')->prefix('billings')->group(function () {
+
+    Route::get('/', [BillingController::class, 'index']);
+
+    Route::middleware('permission:billing.create')
+        ->post('/', [BillingController::class, 'store']);
 });

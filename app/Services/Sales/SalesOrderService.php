@@ -33,7 +33,10 @@ class SalesOrderService
         'status'      => 'draft',
         'created_by'  => $userId,
         'notes'       => $data['notes'] ?? null,
+        'source_document_type' => $data['source_document_type'] ?? null,
+        'source_document_id'   => $data['source_document_id'] ?? null,
       ]);
+
 
       $totalQty = 0;
       $totalAmount = 0;
@@ -68,14 +71,18 @@ class SalesOrderService
   /**
    * Submit Sales Order → reserve stock
    */
-  public function submit(int $salesOrderId): void
+  public function submit(int $salesOrderId): SalesOrder
   {
-    DB::transaction(function () use ($salesOrderId) {
+    return DB::transaction(function () use ($salesOrderId) {
 
-      $salesOrder = SalesOrder::with('items')->lockForUpdate()->findOrFail($salesOrderId);
+      $salesOrder = SalesOrder::with(['items', 'store', 'customer'])
+        ->lockForUpdate()
+        ->findOrFail($salesOrderId);
 
       if ($salesOrder->status !== 'draft') {
-        throw new Exception('Sales order bukan status draft');
+        throw new Exception(
+          "Sales order status '{$salesOrder->status}' tidak bisa disubmit"
+        );
       }
 
       foreach ($salesOrder->items as $item) {
@@ -92,22 +99,32 @@ class SalesOrderService
         'status'       => 'submitted',
         'submitted_at' => now(),
       ]);
+
+      return $salesOrder;
     });
   }
+
+
+
 
   /**
    * Cancel Sales Order → release reserved stock
    */
-  public function cancel(int $salesOrderId): void
+  public function cancel(int $salesOrderId): SalesOrder
   {
-    DB::transaction(function () use ($salesOrderId) {
+    return DB::transaction(function () use ($salesOrderId) {
 
-      $salesOrder = SalesOrder::with('items')->lockForUpdate()->findOrFail($salesOrderId);
+      $salesOrder = SalesOrder::with(['items', 'store', 'customer'])
+        ->lockForUpdate()
+        ->findOrFail($salesOrderId);
 
       if (!in_array($salesOrder->status, ['draft', 'submitted'])) {
-        throw new Exception('Sales order tidak bisa dibatalkan');
+        throw new Exception(
+          "Sales order status '{$salesOrder->status}' tidak bisa dibatalkan"
+        );
       }
 
+      // Release reserved stock jika sudah submit
       if ($salesOrder->status === 'submitted') {
         foreach ($salesOrder->items as $item) {
           $this->inventoryService->releaseReservedStock(
@@ -121,17 +138,20 @@ class SalesOrderService
       }
 
       $salesOrder->update([
-        'status'        => 'cancelled',
-        'cancelled_at'  => now(),
+        'status'       => 'cancelled',
+        'cancelled_at' => now(),
       ]);
+
+      return $salesOrder;
     });
   }
+
 
   /**
    * Generate SO Number
    */
   protected function generateSoNumber(): string
   {
-    return 'SO-' . now()->format('Ymd') . '-' . Str::upper(Str::random(6));
+    return 'SO' . now()->format('Ymd') . Str::upper(Str::random(6));
   }
 }

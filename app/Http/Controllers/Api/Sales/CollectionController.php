@@ -15,29 +15,36 @@ class CollectionController extends Controller
     $this->service = $service;
   }
 
-  /**
-   * Create Collection (Payment)
-   */
   public function store(Request $request)
   {
     $data = $request->validate([
-      'billing_id' => 'required|exists:billings,id',
-      'amount' => 'required|numeric|min:0.01',
+      'billing_id'     => 'required|exists:billings,id',
+      'amount'         => 'required|numeric|min:0.01',
       'payment_method' => 'required|string',
-      'notes' => 'nullable|string',
+      'notes'          => 'nullable|string',
     ]);
 
     $collection = $this->service->pay(
       $data['billing_id'],
       $data['amount'],
       $data['payment_method'],
-      auth()->id(),
+      auth()->user()->id,
       $data['notes'] ?? null
     );
 
+    $billing = $collection->billing;
+
     return response()->json([
-      'message' => 'Payment processed',
-      'data' => $collection
+      'success' => true,
+      'message' => $billing->status === 'paid'
+        ? 'Pembayaran lunas, stok telah dikeluarkan'
+        : 'Pembayaran tercatat (parsial)',
+      'data' => [
+        'billing_id'     => $billing->id,
+        'paid_amount'    => $billing->paid_amount,
+        'billing_status' => $billing->status,
+        'is_stock_out'   => $billing->status === 'paid',
+      ]
     ], 201);
   }
 }
