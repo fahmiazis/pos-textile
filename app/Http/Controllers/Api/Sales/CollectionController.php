@@ -27,7 +27,7 @@ class CollectionController extends Controller
       $billingId,
       $data['amount'],
       $data['payment_method'],
-      auth()->id(), // boleh null
+      auth()->id(),
       $data['notes'] ?? null
     );
 

@@ -4,9 +4,9 @@ namespace App\Services\Sales;
 
 use App\Models\Sales\SalesOrder;
 use App\Models\Sales\SalesOrderItem;
+use App\Services\Common\DocumentNumberService;
 use App\Services\Inventory\InventoryService;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Exception;
 
 class SalesOrderService
@@ -26,17 +26,18 @@ class SalesOrderService
     return DB::transaction(function () use ($data, $userId) {
 
       $salesOrder = SalesOrder::create([
-        'so_number'   => $this->generateSoNumber(),
+        'so_number' => DocumentNumberService::generate(
+          'sales_orders',
+          'so_number',
+          'SO'
+        ),
         'store_id'    => $data['store_id'],
         'customer_id' => $data['customer_id'],
         'order_date'  => $data['order_date'],
         'status'      => 'draft',
         'created_by'  => $userId,
         'notes'       => $data['notes'] ?? null,
-        // 'source_document_type' => $data['source_document_type'] ?? null,
-        // 'source_document_id'   => $data['source_document_id'] ?? null,
       ]);
-
 
       $totalQty = 0;
       $totalAmount = 0;
@@ -75,14 +76,12 @@ class SalesOrderService
   {
     return DB::transaction(function () use ($salesOrderId) {
 
-      $salesOrder = SalesOrder::with(['items', 'store', 'customer'])
+      $salesOrder = SalesOrder::with('items')
         ->lockForUpdate()
         ->findOrFail($salesOrderId);
 
       if ($salesOrder->status !== 'draft') {
-        throw new Exception(
-          "Sales order status '{$salesOrder->status}' tidak bisa disubmit"
-        );
+        throw new Exception("Sales order tidak bisa disubmit");
       }
 
       foreach ($salesOrder->items as $item) {
@@ -104,27 +103,21 @@ class SalesOrderService
     });
   }
 
-
-
-
   /**
-   * Cancel Sales Order → release reserved stock
+   * Cancel Sales Order
    */
   public function cancel(int $salesOrderId): SalesOrder
   {
     return DB::transaction(function () use ($salesOrderId) {
 
-      $salesOrder = SalesOrder::with(['items', 'store', 'customer'])
+      $salesOrder = SalesOrder::with('items')
         ->lockForUpdate()
         ->findOrFail($salesOrderId);
 
       if (!in_array($salesOrder->status, ['draft', 'submitted'])) {
-        throw new Exception(
-          "Sales order status '{$salesOrder->status}' tidak bisa dibatalkan"
-        );
+        throw new Exception('Sales order tidak bisa dibatalkan');
       }
 
-      // Release reserved stock jika sudah submit
       if ($salesOrder->status === 'submitted') {
         foreach ($salesOrder->items as $item) {
           $this->inventoryService->releaseReservedStock(
@@ -144,14 +137,5 @@ class SalesOrderService
 
       return $salesOrder;
     });
-  }
-
-
-  /**
-   * Generate SO Number
-   */
-  protected function generateSoNumber(): string
-  {
-    return 'SO' . now()->format('Ymd') . Str::upper(Str::random(6));
   }
 }

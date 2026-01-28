@@ -12,6 +12,7 @@ class Collection extends Model
   protected $table = 'collections';
 
   protected $fillable = [
+    'collection_number',
     'billing_id',
     'payment_date',
     'amount',

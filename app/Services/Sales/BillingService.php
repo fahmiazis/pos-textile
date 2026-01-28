@@ -4,15 +4,12 @@ namespace App\Services\Sales;
 
 use App\Models\Sales\Billing;
 use App\Models\Sales\SalesOrder;
+use App\Services\Common\DocumentNumberService;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Exception;
 
 class BillingService
 {
-  /**
-   * Create billing from sales order
-   */
   public function createFromSalesOrder(int $salesOrderId): Billing
   {
     return DB::transaction(function () use ($salesOrderId) {
@@ -23,19 +20,17 @@ class BillingService
         throw new Exception('Sales order belum disubmit');
       }
 
-      // Cegah double billing
       if ($salesOrder->billings()->whereNotIn('status', ['cancelled'])->exists()) {
-        throw new Exception('Billing aktif sudah ada untuk sales order ini');
+        throw new Exception('Billing aktif sudah ada');
       }
 
       return Billing::create([
-        'billing_number' => $this->generateBillingNumber(),
-
+        'billing_number' => DocumentNumberService::generate(
+          'billings',
+          'billing_number',
+          'INV'
+        ),
         'sales_order_id' => $salesOrder->id,
-
-        // 'source_document_type' => 'sales_order',
-        // 'source_document_id'   => $salesOrder->id,
-
         'billing_date'   => now()->toDateString(),
         'total_amount'  => $salesOrder->total_amount,
         'paid_amount'   => 0,
@@ -44,17 +39,13 @@ class BillingService
     });
   }
 
-  protected function generateBillingNumber(): string
-  {
-    return 'INV-' . now()->format('Ymd') . '-' . Str::upper(Str::random(6));
-  }
-
   public function list(array $filters = [])
   {
-    $query = Billing::with([
-      'salesOrder.customer',
-      'collections'
-    ]);
+    $query = Billing::query()
+      ->with([
+        'salesOrder.customer',
+        'collections'
+      ]);
 
     if (!empty($filters['status'])) {
       $statuses = is_array($filters['status'])
@@ -64,6 +55,8 @@ class BillingService
       $query->whereIn('status', $statuses);
     }
 
-    return $query->latest()->get();
+    return $query
+      ->orderByDesc('id')
+      ->get();
   }
 }

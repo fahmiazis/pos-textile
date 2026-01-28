@@ -7,6 +7,7 @@ use App\Models\Sales\Collection;
 use App\Events\Sales\BillingPaid;
 use Illuminate\Support\Facades\DB;
 use Exception;
+use App\Services\Common\DocumentNumberService;
 
 class CollectionService
 {
@@ -32,6 +33,11 @@ class CollectionService
       }
 
       $collection = Collection::create([
+        'collection_number' => DocumentNumberService::generate(
+          'collections',
+          'collection_number',
+          'COL'
+        ),
         'billing_id'     => $billing->id,
         'payment_date'   => now(),
         'amount'         => $amount,

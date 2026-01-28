@@ -150,8 +150,13 @@ Route::middleware('api.auth')->group(function () {
 
         Route::middleware('permission:inventory.view')
             ->get('/movements', [InventoryController::class, 'movements']);
+
+        Route::middleware('permission:inventory.manage')
+            ->post('/stock-in', [InventoryController::class, 'stockIn']);
     });
 });
+
+
 
 
 

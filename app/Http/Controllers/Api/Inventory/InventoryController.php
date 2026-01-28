@@ -90,4 +90,31 @@ class InventoryController extends Controller
         ->get()
     ]);
   }
+
+  /**
+   * POST /inventory/stock-in
+   * Tambah stock manual (initial stock / gudang)
+   */
+  public function stockIn(Request $request)
+  {
+    $data = $request->validate([
+      'store_id'   => 'required|exists:stores,id',
+      'product_id' => 'required|exists:products,id',
+      'qty'        => 'required|numeric|min:0.01',
+      'notes'      => 'nullable|string',
+    ]);
+
+    $this->inventoryService->stockIn(
+      $data['store_id'],
+      $data['product_id'],
+      $data['qty'],
+      'manual',
+      0
+    );
+
+    return response()->json([
+      'success' => true,
+      'message' => 'Stock berhasil ditambahkan',
+    ]);
+  }
 }
