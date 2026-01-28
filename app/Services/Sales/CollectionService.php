@@ -10,17 +10,13 @@ use Exception;
 
 class CollectionService
 {
-  /**
-   * Create collection (payment)
-   */
   public function pay(
     int $billingId,
     float $amount,
     string $paymentMethod,
-    int $userId,
+    ?int $userId = null,
     ?string $notes = null
   ): Collection {
-
     return DB::transaction(function () use (
       $billingId,
       $amount,
@@ -35,38 +31,30 @@ class CollectionService
         throw new Exception('Billing sudah lunas');
       }
 
-      if (($billing->paid_amount + $amount) > $billing->total_amount) {
-        throw new Exception('Pembayaran melebihi total billing');
-      }
-
-      // Simpan collection
       $collection = Collection::create([
         'billing_id'     => $billing->id,
-        'payment_date'   => now()->toDateString(),
+        'payment_date'   => now(),
         'amount'         => $amount,
         'payment_method' => $paymentMethod,
         'notes'          => $notes,
         'created_by'     => $userId,
       ]);
 
-      // Update billing
+
       $billing->paid_amount += $amount;
 
       if ($billing->paid_amount >= $billing->total_amount) {
-
-        $billing->update([
-          'paid_amount' => $billing->paid_amount,
-          'status'      => 'paid',
-        ]);
-
-        //  FIRE EVENT
-        BillingPaid::dispatch($billing);
+        $billing->paid_amount = $billing->total_amount;
+        $billing->status = 'paid';
+        $billing->save();
       } else {
+        $billing->status = 'partial';
+        $billing->save();
+      }
 
-        $billing->update([
-          'paid_amount' => $billing->paid_amount,
-          'status'      => 'partial',
-        ]);
+      // 🔥 dispatch event SETELAH billing pasti valid
+      if ($billing->status === 'paid') {
+        BillingPaid::dispatch($billing);
       }
 
       return $collection;

@@ -15,20 +15,19 @@ class CollectionController extends Controller
     $this->service = $service;
   }
 
-  public function store(Request $request)
+  public function store(Request $request, $billingId)
   {
     $data = $request->validate([
-      'billing_id'     => 'required|exists:billings,id',
       'amount'         => 'required|numeric|min:0.01',
-      'payment_method' => 'required|string',
-      'notes'          => 'nullable|string',
+      'payment_method' => 'required|string|max:50',
+      'notes'          => 'nullable|string|max:255',
     ]);
 
     $collection = $this->service->pay(
-      $data['billing_id'],
+      $billingId,
       $data['amount'],
       $data['payment_method'],
-      auth()->user()->id,
+      auth()->id(), // boleh null
       $data['notes'] ?? null
     );
 
@@ -44,7 +43,7 @@ class CollectionController extends Controller
         'paid_amount'    => $billing->paid_amount,
         'billing_status' => $billing->status,
         'is_stock_out'   => $billing->status === 'paid',
-      ]
+      ],
     ], 201);
   }
 }

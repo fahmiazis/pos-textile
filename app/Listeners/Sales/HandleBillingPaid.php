@@ -21,7 +21,6 @@ class HandleBillingPaid
 
     DB::transaction(function () use ($billing) {
 
-      // STOCK OUT
       foreach ($billing->salesOrder->items as $item) {
         $this->inventoryService->stockOut(
           $billing->salesOrder->store_id,
@@ -32,7 +31,6 @@ class HandleBillingPaid
         );
       }
 
-      // COMPLETE SALES ORDER
       $billing->salesOrder->update([
         'status'       => 'completed',
         'completed_at' => now(),

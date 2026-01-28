@@ -206,10 +206,10 @@ Route::middleware('api.auth')->prefix('billings')->group(function () {
         ->post('/', [BillingController::class, 'store']);
 });
 
-Route::post(
-    '/billings/{billing}/collect',
-    [\App\Http\Controllers\Api\Sales\CollectionController::class, 'store']
-);
+
+Route::middleware(['api.auth', 'permission:collection.create'])
+    ->post('/billings/{billing}/collect', [CollectionController::class, 'store']);
+
 
 /*
 |--------------------------------------------------------------------------

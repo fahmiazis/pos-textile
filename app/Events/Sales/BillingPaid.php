@@ -10,10 +10,7 @@ class BillingPaid
 {
   use Dispatchable, SerializesModels;
 
-  public Billing $billing;
-
-  public function __construct(Billing $billing)
-  {
-    $this->billing = $billing;
-  }
+  public function __construct(
+    public Billing $billing
+  ) {}
 }
