@@ -9,12 +9,29 @@ return new class extends Migration {
     {
         Schema::create('refunds', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('sales_order_id')->constrained();
-            $table->foreignId('billing_id')->constrained();
+
+            $table->foreignId('sales_order_id')
+                ->constrained()
+                ->restrictOnDelete();
+
+            $table->foreignId('billing_id')
+                ->constrained()
+                ->restrictOnDelete();
+
             $table->decimal('amount', 15, 2);
-            $table->string('status')->default('approved');
+
+            $table->enum('status', [
+                'approved',
+                'rejected',
+                'cancelled',
+            ])->default('approved');
+
             $table->text('reason')->nullable();
+
             $table->timestamps();
+
+            // FULL refund only (1 billing = 1 refund)
+            $table->unique('billing_id');
         });
     }
 

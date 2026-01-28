@@ -4,9 +4,9 @@ namespace App\Listeners\Inventory;
 
 use App\Events\Sales\RefundApproved;
 use App\Services\Inventory\InventoryService;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Facades\DB;
 
-class ReverseStockAfterRefundListener implements ShouldQueue
+class ReverseStockAfterRefundListener
 {
     public function __construct(
         protected InventoryService $inventoryService
@@ -14,14 +14,19 @@ class ReverseStockAfterRefundListener implements ShouldQueue
 
     public function handle(RefundApproved $event): void
     {
-        $salesOrder = $event->refund->salesOrder;
+        $refund = $event->refund;
+        $salesOrder = $refund->salesOrder->load('items');
 
-        foreach ($salesOrder->items as $item) {
-            $this->inventoryService->stockIn(
-                productId: $item->product_id,
-                qty: $item->qty,
-                reference: 'REFUND-' . $salesOrder->order_number
-            );
-        }
+        DB::transaction(function () use ($salesOrder, $refund) {
+            foreach ($salesOrder->items as $item) {
+                $this->inventoryService->stockIn(
+                    $salesOrder->store_id,
+                    $item->product_id,
+                    $item->qty_base,
+                    'refund',
+                    $refund->id
+                );
+            }
+        });
     }
 }

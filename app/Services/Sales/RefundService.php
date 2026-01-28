@@ -6,6 +6,7 @@ use App\Models\Sales\Refund;
 use App\Models\Sales\SalesOrder;
 use App\Events\Sales\RefundApproved;
 use Illuminate\Support\Facades\DB;
+use Exception;
 
 class RefundService
 {
@@ -13,12 +14,23 @@ class RefundService
   {
     return DB::transaction(function () use ($salesOrder, $reason) {
 
-      $billing = $salesOrder->billing;
+      // Ambil billing yang PAID
+      $billing = $salesOrder->billings()
+        ->where('status', 'paid')
+        ->latest()
+        ->lockForUpdate()
+        ->first();
 
-      if ($billing->status !== 'paid') {
-        throw new \Exception('Only PAID billing can be refunded');
+      if (! $billing) {
+        throw new Exception('Sales order belum lunas / billing tidak valid');
       }
 
+      // Cegah double refund
+      if ($billing->status === 'refunded') {
+        throw new Exception('Billing sudah direfund');
+      }
+
+      // Create refund
       $refund = Refund::create([
         'sales_order_id' => $salesOrder->id,
         'billing_id'     => $billing->id,
@@ -26,6 +38,19 @@ class RefundService
         'status'         => 'approved',
         'reason'         => $reason,
       ]);
+
+      // Update billing (INI YANG PENTING)
+      $billing->update([
+        'status'      => 'refunded',
+        'paid_amount' => 0,
+      ]);
+
+      // OPTIONAL tapi sehat secara bisnis
+      if ($salesOrder->status !== 'cancelled') {
+        $salesOrder->update([
+          'status' => 'cancelled',
+        ]);
+      }
 
       event(new RefundApproved($refund));
 

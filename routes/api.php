@@ -164,6 +164,7 @@ Route::middleware('api.auth')->group(function () {
 use App\Http\Controllers\Api\Sales\SalesOrderController;
 use App\Http\Controllers\Api\Sales\BillingController;
 use App\Http\Controllers\Api\Sales\CollectionController;
+use App\Http\Controllers\Api\Sales\RefundController;
 
 Route::middleware('api.auth')->group(function () {
 
@@ -210,6 +211,8 @@ Route::middleware('api.auth')->prefix('billings')->group(function () {
 Route::middleware(['api.auth', 'permission:collection.create'])
     ->post('/billings/{billing}/collect', [CollectionController::class, 'store']);
 
+Route::middleware(['api.auth', 'permission:refund.create'])
+    ->post('/sales-orders/{salesOrder}/refund/full', [RefundController::class, 'full']);
 
 /*
 |--------------------------------------------------------------------------

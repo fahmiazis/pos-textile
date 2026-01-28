@@ -9,18 +9,23 @@ use Illuminate\Http\Request;
 
 class RefundController extends Controller
 {
-    public function full(Request $request, $salesOrderId, RefundService $refundService)
-    {
-        $salesOrder = SalesOrder::with(['billing', 'items'])
-            ->findOrFail($salesOrderId);
+    public function full(
+        Request $request,
+        SalesOrder $salesOrder,
+        RefundService $refundService
+    ) {
+        $request->validate([
+            'reason' => 'nullable|string|max:255',
+        ]);
 
         $refund = $refundService->fullRefund(
             $salesOrder,
-            $request->input('reason')
+            $request->reason
         );
 
         return response()->json([
-            'message' => 'Refund processed successfully',
+            'success' => true,
+            'message' => 'Full refund berhasil diproses',
             'data'    => $refund,
         ]);
     }
