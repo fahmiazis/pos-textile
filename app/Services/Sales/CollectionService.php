@@ -58,7 +58,7 @@ class CollectionService
         $billing->save();
       }
 
-      // 🔥 dispatch event SETELAH billing pasti valid
+      // dispatch event SETELAH billing 
       if ($billing->status === 'paid') {
         BillingPaid::dispatch($billing);
       }

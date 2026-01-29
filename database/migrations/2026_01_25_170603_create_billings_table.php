@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('billings', function (Blueprint $table) {
             $table->id();
 
-            $table->string('billing_number', 30)->unique();
+            $table->string('invoice_number', 30)->unique();
             $table->foreignId('sales_order_id')->constrained('sales_orders');
 
             $table->date('billing_date');

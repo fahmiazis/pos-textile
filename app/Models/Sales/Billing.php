@@ -12,7 +12,7 @@ class Billing extends Model
   protected $table = 'billings';
 
   protected $fillable = [
-    'billing_number',
+    'invoice_number',
     'sales_order_id',
     'billing_date',
     'total_amount',

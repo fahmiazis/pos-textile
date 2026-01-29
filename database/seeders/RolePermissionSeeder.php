@@ -11,14 +11,12 @@ class RolePermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        // Reset cache permission (WAJIB)
+        // WAJIB: reset cache permission
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        /**
-         * ==============================
-         * 1️⃣ MASTER DATA (CRUD)
-         * ==============================
-         */
+        /*
+        | MASTER DATA (CRUD)
+        */
         $masterModules = [
             'category',
             'store',
@@ -43,18 +41,23 @@ class RolePermissionSeeder extends Seeder
             }
         }
 
-        /**
-         * ==============================
-         * 2️⃣ SALES (TRANSACTION FLOW)
-         * ==============================
-         */
+        /*
+        | SALES
+        */
         $salesPermissions = [
+            'sales_order.view',
             'sales_order.create',
+            'sales_order.update',
             'sales_order.submit',
             'sales_order.cancel',
 
+            'billing.view',
             'billing.create',
+
+            'collection.view',
             'collection.create',
+
+            'refund.create',
         ];
 
         foreach ($salesPermissions as $permission) {
@@ -64,13 +67,12 @@ class RolePermissionSeeder extends Seeder
             ]);
         }
 
-        /**
-         * ==============================
-         * 3️⃣ INVENTORY (READ ONLY)
-         * ==============================
-         */
+        /*
+        | INVENTORY
+        */
         $inventoryPermissions = [
             'inventory.view',
+            'inventory.manage',
         ];
 
         foreach ($inventoryPermissions as $permission) {
@@ -80,13 +82,11 @@ class RolePermissionSeeder extends Seeder
             ]);
         }
 
-        /**
-         * ==============================
-         * 4️⃣ ROLES
-         * ==============================
-         */
+        /*
+        | ROLES
+        */
         $superAdmin = Role::firstOrCreate([
-            'name' => 'super-admin',
+            'name' => 'superadmin',
             'guard_name' => 'web',
         ]);
 
@@ -105,23 +105,19 @@ class RolePermissionSeeder extends Seeder
             'guard_name' => 'web',
         ]);
 
-        /**
-         * ==============================
-         * 5️⃣ ASSIGN PERMISSIONS
-         * ==============================
-         */
+        /*
+        | ASSIGN PERMISSIONS
+        */
 
-        // SUPER ADMIN = ALL
+        // SUPERADMIN = ALL
         $superAdmin->syncPermissions(Permission::all());
 
-        // ADMIN = semua master + sales + inventory
         $admin->syncPermissions(
             Permission::whereNotIn('name', [
-                'customer.delete', // contoh pengecualian
+                'customer.delete',
             ])->get()
         );
 
-        // STAFF = transaksi + master non destructive
         $staff->syncPermissions(
             Permission::whereIn(
                 'name',
@@ -129,23 +125,33 @@ class RolePermissionSeeder extends Seeder
                     "$m.view",
                     "$m.create",
                     "$m.update",
+                ])->merge([
+                    'sales_order.view',
+                    'sales_order.create',
+                    'sales_order.submit',
+
+                    'billing.view',
+                    'billing.create',
+
+                    'collection.view',
+                    'collection.create',
+
+                    'inventory.view',
                 ])
-                    ->merge([
-                        'sales_order.create',
-                        'sales_order.submit',
-                        'billing.create',
-                        'collection.create',
-                        'inventory.view',
-                    ])
             )->get()
         );
 
-        // VIEWER = view only
+        // VIEWER = read only
         $viewer->syncPermissions(
             Permission::whereIn(
                 'name',
                 collect($masterModules)->map(fn($m) => "$m.view")
-                    ->merge(['inventory.view'])
+                    ->merge([
+                        'sales_order.view',
+                        'billing.view',
+                        'collection.view',
+                        'inventory.view',
+                    ])
             )->get()
         );
     }

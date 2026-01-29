@@ -7,9 +7,6 @@ use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('sales_orders', function (Blueprint $table) {
@@ -20,7 +17,6 @@ return new class extends Migration
             }
         });
 
-        // isi so_number untuk data lama
         DB::table('sales_orders')
             ->whereNull('so_number')
             ->orWhere('so_number', '')
@@ -39,9 +35,29 @@ return new class extends Migration
                 }
             });
 
-        // baru pasang unique
-        Schema::table('sales_orders', function (Blueprint $table) {
-            $table->unique('so_number', 'sales_orders_so_number_unique');
-        });
+        if (! $this->indexExists('sales_orders', 'sales_orders_so_number_unique')) {
+            Schema::table('sales_orders', function (Blueprint $table) {
+                $table->unique('so_number', 'sales_orders_so_number_unique');
+            });
+        }
+    }
+
+    public function down(): void
+    {
+        if ($this->indexExists('sales_orders', 'sales_orders_so_number_unique')) {
+            Schema::table('sales_orders', function (Blueprint $table) {
+                $table->dropUnique('sales_orders_so_number_unique');
+            });
+        }
+    }
+
+    private function indexExists(string $table, string $index): bool
+    {
+        $result = DB::select(
+            "SHOW INDEX FROM {$table} WHERE Key_name = ?",
+            [$index]
+        );
+
+        return count($result) > 0;
     }
 };

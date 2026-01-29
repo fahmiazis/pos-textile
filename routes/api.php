@@ -175,6 +175,8 @@ Route::middleware('api.auth')->group(function () {
 
     Route::prefix('sales')->group(function () {
 
+
+        Route::get('/orders/collected', [CollectionController::class, 'collected']);
         Route::get('/orders/billable', [SalesOrderController::class, 'billable']);
         Route::get('/orders', [SalesOrderController::class, 'index']);
         Route::get('/orders/{id}', [SalesOrderController::class, 'show']);

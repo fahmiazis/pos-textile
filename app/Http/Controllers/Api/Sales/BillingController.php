@@ -28,7 +28,7 @@ class BillingController extends Controller
       'message' => 'Billing berhasil dibuat',
       'data' => [
         'billing_id' => $billing->id,
-        'billing_number' => $billing->billing_number,
+        'invoice_number' => $billing->invoice_number,
         'total_amount' => $billing->total_amount,
         'status' => $billing->status,
       ]

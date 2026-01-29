@@ -25,9 +25,9 @@ class BillingService
       }
 
       return Billing::create([
-        'billing_number' => DocumentNumberService::generate(
+        'invoice_number' => DocumentNumberService::generate(
           'billings',
-          'billing_number',
+          'invoice_number',
           'INV'
         ),
         'sales_order_id' => $salesOrder->id,

@@ -28,7 +28,7 @@ class MasterDataSeeder extends Seeder
                 'code' => 'ROLL',
                 'name' => 'Roll',
                 'base_unit_id' => $meterId,
-                'multiplier' => 50, // 1 roll = 50 meter
+                'multiplier' => 50,
                 'is_active' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -95,10 +95,24 @@ class MasterDataSeeder extends Seeder
                     'created_at' => now(),
                     'updated_at' => now(),
                 ],
+                [
+                    'code' => 'CUST-003',
+                    'name' => 'Retail Bagja',
+                    'phone' => '08222333333',
+                    'address' => 'Tasikmalaya',
+                    'customer_type' => 'RETAIL',
+                    'default_store_id' => $storeId,
+                    'is_active' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
             ]);
 
 
 
+            /**
+             * PRODUCTS (KAIN)
+             */
             /**
              * PRODUCTS (KAIN)
              */
@@ -114,17 +128,25 @@ class MasterDataSeeder extends Seeder
                 'updated_at' => now(),
             ]);
 
-            /**
-             * SALES PRICING
-             */
-            DB::table('sales_pricings')->insert([
-                'product_id' => $productKatunId,
-                'store_id' => $storeId,
-                'customer_type' => 'GROSIR',
-                'price_per_meter' => 25000,
-                'min_qty' => 10,
-                'valid_from' => now()->toDateString(),
-                'valid_to' => null,
+            $productSutraId = DB::table('products')->insertGetId([
+                'sku' => 'KAIN-SUTRA-01',
+                'name' => 'Kain Sutra Halus',
+                'brand_id' => $brandId,
+                'base_uom_id' => $meterId,
+                'category_id' => $categoryId,
+                'description' => 'Kain sutra halus kualitas tinggi',
+                'is_active' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            $productPolyId = DB::table('products')->insertGetId([
+                'sku' => 'KAIN-POLY-01',
+                'name' => 'Kain Polyester',
+                'brand_id' => $brandId,
+                'base_uom_id' => $meterId,
+                'category_id' => $categoryId,
+                'description' => 'Kain polyester kuat dan ekonomis',
                 'is_active' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -132,16 +154,80 @@ class MasterDataSeeder extends Seeder
 
 
             /**
+             * SALES PRICING
+             */
+            DB::table('sales_pricings')->insert([
+                [
+                    'product_id' => $productKatunId,
+                    'store_id' => $storeId,
+                    'customer_type' => 'GROSIR',
+                    'price_per_meter' => 25000,
+                    'min_qty' => 10,
+                    'valid_from' => now()->toDateString(),
+                    'valid_to' => null,
+                    'is_active' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'product_id' => $productSutraId,
+                    'store_id' => $storeId,
+                    'customer_type' => 'GROSIR',
+                    'price_per_meter' => 55000,
+                    'min_qty' => 5,
+                    'valid_from' => now()->toDateString(),
+                    'valid_to' => null,
+                    'is_active' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'product_id' => $productPolyId,
+                    'store_id' => $storeId,
+                    'customer_type' => 'GROSIR',
+                    'price_per_meter' => 18000,
+                    'min_qty' => 20,
+                    'valid_from' => now()->toDateString(),
+                    'valid_to' => null,
+                    'is_active' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+            ]);
+
+
+
+            /**
              * INVENTORY INITIAL
              */
             DB::table('inventories')->insert([
-                'store_id' => $storeId,
-                'product_id' => $productKatunId,
-                'stock_on_hand' => 1000,   // 1000 meter
-                'stock_reserved' => 0,
-                'stock_available' => 1000,
-                'created_at' => now(),
-                'updated_at' => now(),
+                [
+                    'store_id' => $storeId,
+                    'product_id' => $productKatunId,
+                    'stock_on_hand' => 1000,
+                    'stock_reserved' => 0,
+                    'stock_available' => 1000,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'store_id' => $storeId,
+                    'product_id' => $productSutraId,
+                    'stock_on_hand' => 500,
+                    'stock_reserved' => 0,
+                    'stock_available' => 500,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'store_id' => $storeId,
+                    'product_id' => $productPolyId,
+                    'stock_on_hand' => 2000,
+                    'stock_reserved' => 0,
+                    'stock_available' => 2000,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
             ]);
         });
     }

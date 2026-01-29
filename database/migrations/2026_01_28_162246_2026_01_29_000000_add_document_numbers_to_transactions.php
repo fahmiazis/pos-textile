@@ -25,8 +25,8 @@ return new class extends Migration {
          * INV26010001
          */
         Schema::table('billings', function (Blueprint $table) {
-            if (!Schema::hasColumn('billings', 'billing_number')) {
-                $table->string('billing_number', 20)
+            if (!Schema::hasColumn('billings', 'invoice_number')) {
+                $table->string('invoice_number', 20)
                     ->unique()
                     ->after('id');
             }
@@ -67,9 +67,9 @@ return new class extends Migration {
         });
 
         Schema::table('billings', function (Blueprint $table) {
-            if (Schema::hasColumn('billings', 'billing_number')) {
-                $table->dropUnique(['billing_number']);
-                $table->dropColumn('billing_number');
+            if (Schema::hasColumn('billings', 'invoice_number')) {
+                $table->dropUnique(['invoice_number']);
+                $table->dropColumn('invoice_number');
             }
         });
 
