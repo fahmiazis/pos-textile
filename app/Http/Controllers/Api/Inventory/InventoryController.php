@@ -19,7 +19,6 @@ class InventoryController extends Controller
 
   /**
    * GET /inventory/availability
-   * Snapshot stock
    */
   public function availability(Request $request)
   {
@@ -92,7 +91,6 @@ class InventoryController extends Controller
   }
 
   /**
-   * POST /inventory/stock-in
    * Tambah stock manual (initial stock / gudang)
    */
   public function stockIn(Request $request)

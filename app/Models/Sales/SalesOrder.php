@@ -53,4 +53,8 @@ class SalesOrder extends Model
   {
     return $this->hasMany(Billing::class);
   }
+  protected $casts = [
+    'total_qty'    => 'float',
+    'total_amount' => 'float',
+  ];
 }

@@ -42,4 +42,12 @@ class SalesOrderItem extends Model
   {
     return $this->belongsTo(\App\Models\Master\Unit::class, 'uom_id');
   }
+
+  protected $casts = [
+    'qty_input' => 'float',
+    'qty_base'  => 'float',
+    'price'     => 'float',
+    'discount'  => 'float',
+    'subtotal'  => 'float',
+  ];
 }

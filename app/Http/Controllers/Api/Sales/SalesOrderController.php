@@ -77,7 +77,6 @@ class SalesOrderController extends Controller
       'items.*.product_id' => 'required|exists:products,id',
       'items.*.uom_id' => 'required|exists:units,id',
       'items.*.qty_input' => 'required|numeric|min:0.001',
-      'items.*.qty_base' => 'required|numeric|min:0.001',
       'items.*.price' => 'required|numeric|min:0',
       'items.*.discount' => 'nullable|numeric|min:0',
     ]);
@@ -177,6 +176,32 @@ class SalesOrderController extends Controller
         ]
       ], 422);
     }
+  }
+  public function update(Request $request, int $id)
+  {
+    $data = $request->validate([
+      'customer_id' => 'required|exists:customers,id',
+      'order_date'  => 'required|date',
+
+      'items' => 'required|array|min:1',
+      'items.*.product_id' => 'required|exists:products,id',
+      'items.*.uom_id'     => 'required|exists:units,id',
+      'items.*.qty_input'  => 'required|numeric|min:0.001',
+      'items.*.price'      => 'required|numeric|min:0',
+      'items.*.discount'   => 'nullable|numeric|min:0',
+    ]);
+
+    $order = $this->service->updateDraft($id, $data);
+
+    return response()->json([
+      'success' => true,
+      'message' => 'Sales order draft berhasil diupdate',
+      'data'    => $order->load([
+        'items.product',
+        'customer',
+        'store'
+      ]),
+    ]);
   }
 
   public function billable()

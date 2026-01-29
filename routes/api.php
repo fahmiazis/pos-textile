@@ -179,9 +179,11 @@ Route::middleware('api.auth')->group(function () {
         Route::get('/orders', [SalesOrderController::class, 'index']);
         Route::get('/orders/{id}', [SalesOrderController::class, 'show']);
 
-
         Route::middleware('permission:sales_order.create')
             ->post('/orders', [SalesOrderController::class, 'store']);
+
+        Route::middleware('permission:sales_order.update')
+            ->put('/orders/{id}', [SalesOrderController::class, 'update']);
 
         Route::middleware('permission:sales_order.submit')
             ->post('/orders/{id}/submit', [SalesOrderController::class, 'submit']);
@@ -189,15 +191,14 @@ Route::middleware('api.auth')->group(function () {
         Route::middleware('permission:sales_order.cancel')
             ->post('/orders/{id}/cancel', [SalesOrderController::class, 'cancel']);
 
-        /* ====== BILLING ====== */
         Route::middleware('permission:billing.create')
             ->post('/billings', [BillingController::class, 'store']);
 
-        /* ====== COLLECTION ====== */
         Route::middleware('permission:collection.create')
             ->post('/collections', [CollectionController::class, 'store']);
     });
 });
+
 
 /*
 |--------------------------------------------------------------------------
