@@ -45,6 +45,7 @@ class AuthController extends Controller
                 'expires_in' => 1800,
                 'user' => [
                     'id' => $user->id,
+                    'name'  => $user->name,
                     'email' => $user->email
                 ]
             ]
