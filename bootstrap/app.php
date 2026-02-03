@@ -48,7 +48,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => RoleOrPermissionMiddleware::class,
         ]);
     })
-    
+
     ->withExceptions(function (Exceptions $exceptions): void {
 
         // Validation
@@ -77,7 +77,7 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->is('api/*')) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Database error',
+                    'message' => $e->getMessage()
                 ], 500);
             }
         });

@@ -11,13 +11,13 @@ class RolePermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        // Reset cache permission (WAJIB)
+        // WAJIB: reset cache permission
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        /**
-         * 1️⃣ Definisi module & action
-         */
-        $modules = [
+        /*
+        | MASTER DATA (CRUD)
+        */
+        $masterModules = [
             'category',
             'store',
             'customer',
@@ -30,13 +30,10 @@ class RolePermissionSeeder extends Seeder
             'unit',
         ];
 
-        $actions = ['view', 'create', 'update', 'delete'];
+        $masterActions = ['view', 'create', 'update', 'delete'];
 
-        /**
-         * 2️⃣ Generate permissions
-         */
-        foreach ($modules as $module) {
-            foreach ($actions as $action) {
+        foreach ($masterModules as $module) {
+            foreach ($masterActions as $action) {
                 Permission::firstOrCreate([
                     'name' => "{$module}.{$action}",
                     'guard_name' => 'web',
@@ -44,11 +41,52 @@ class RolePermissionSeeder extends Seeder
             }
         }
 
-        /**
-         * 3️⃣ Buat roles
-         */
+        /*
+        | SALES
+        */
+        $salesPermissions = [
+            'sales_order.view',
+            'sales_order.create',
+            'sales_order.update',
+            'sales_order.submit',
+            'sales_order.cancel',
+
+            'billing.view',
+            'billing.create',
+
+            'collection.view',
+            'collection.create',
+
+            'refund.create',
+        ];
+
+        foreach ($salesPermissions as $permission) {
+            Permission::firstOrCreate([
+                'name' => $permission,
+                'guard_name' => 'web',
+            ]);
+        }
+
+        /*
+        | INVENTORY
+        */
+        $inventoryPermissions = [
+            'inventory.view',
+            'inventory.manage',
+        ];
+
+        foreach ($inventoryPermissions as $permission) {
+            Permission::firstOrCreate([
+                'name' => $permission,
+                'guard_name' => 'web',
+            ]);
+        }
+
+        /*
+        | ROLES
+        */
         $superAdmin = Role::firstOrCreate([
-            'name' => 'super-admin',
+            'name' => 'superadmin',
             'guard_name' => 'web',
         ]);
 
@@ -67,32 +105,54 @@ class RolePermissionSeeder extends Seeder
             'guard_name' => 'web',
         ]);
 
-        /**
-         * 4️⃣ Assign permissions ke role
-         */
+        /*
+        | ASSIGN PERMISSIONS
+        */
 
-        // Super Admin = ALL
+        // SUPERADMIN = ALL
         $superAdmin->syncPermissions(Permission::all());
 
-        // Admin = ALL kecuali delete tertentu (contoh fleksibel)
         $admin->syncPermissions(
             Permission::whereNotIn('name', [
                 'customer.delete',
             ])->get()
         );
 
-        // Staff = view + create + update
         $staff->syncPermissions(
-            Permission::whereIn('name', collect($modules)->flatMap(fn($m) => [
-                "$m.view",
-                "$m.create",
-                "$m.update",
-            ]))->get()
+            Permission::whereIn(
+                'name',
+                collect($masterModules)->flatMap(fn($m) => [
+                    "$m.view",
+                    "$m.create",
+                    "$m.update",
+                ])->merge([
+                    'sales_order.view',
+                    'sales_order.create',
+                    'sales_order.submit',
+
+                    'billing.view',
+                    'billing.create',
+
+                    'collection.view',
+                    'collection.create',
+
+                    'inventory.view',
+                ])
+            )->get()
         );
 
-        // Viewer = view only
+        // VIEWER = read only
         $viewer->syncPermissions(
-            Permission::whereIn('name', collect($modules)->map(fn($m) => "$m.view"))->get()
+            Permission::whereIn(
+                'name',
+                collect($masterModules)->map(fn($m) => "$m.view")
+                    ->merge([
+                        'sales_order.view',
+                        'billing.view',
+                        'collection.view',
+                        'inventory.view',
+                    ])
+            )->get()
         );
     }
 }
