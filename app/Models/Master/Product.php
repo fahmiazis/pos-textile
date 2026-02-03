@@ -18,6 +18,10 @@ class Product extends Model
         'description',
         'is_active',
     ];
+    public function baseUom()
+    {
+        return $this->belongsTo(Unit::class, 'base_uom_id');
+    }
 
     public function brand()
     {
