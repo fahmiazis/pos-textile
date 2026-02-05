@@ -26,6 +26,8 @@ use App\Http\Controllers\Api\Master\ProductController;
 use App\Http\Controllers\Api\Master\DiscountController;
 use App\Http\Controllers\Api\Master\VehicleController;
 use App\Http\Controllers\Api\Master\DriverController;
+use App\Http\Controllers\Api\Master\SalesPricingController;
+
 
 Route::post('/auth/login', [AuthController::class, 'login'])
     ->middleware('throttle:5,1');
@@ -130,6 +132,11 @@ Route::middleware('api.auth')->group(function () {
         Route::middleware('permission:driver.update')->put('/drivers/{driver}', [DriverController::class, 'update']);
         Route::middleware('permission:driver.delete')->delete('/drivers/{driver}', [DriverController::class, 'destroy']);
         Route::middleware('permission:driver.update')->put('/drivers/{driver}/restore', [DriverController::class, 'restore']);
+
+        Route::middleware('permission:sales_pricing.view')
+            ->get('/sales-pricings', [SalesPricingController::class, 'index']);
+        Route::middleware('permission:sales_pricing.create')
+            ->post('/sales-pricings', [SalesPricingController::class, 'store']);
     });
 });
 
