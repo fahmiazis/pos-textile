@@ -153,49 +153,6 @@ class MasterDataSeeder extends Seeder
             ]);
 
 
-            /**
-             * SALES PRICING
-             */
-            DB::table('sales_pricings')->insert([
-                [
-                    'product_id' => $productKatunId,
-                    'store_id' => $storeId,
-                    'customer_type' => 'GROSIR',
-                    'price_per_meter' => 25000,
-                    'min_qty' => 10,
-                    'valid_from' => now()->toDateString(),
-                    'valid_to' => null,
-                    'is_active' => 1,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ],
-                [
-                    'product_id' => $productSutraId,
-                    'store_id' => $storeId,
-                    'customer_type' => 'GROSIR',
-                    'price_per_meter' => 55000,
-                    'min_qty' => 5,
-                    'valid_from' => now()->toDateString(),
-                    'valid_to' => null,
-                    'is_active' => 1,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ],
-                [
-                    'product_id' => $productPolyId,
-                    'store_id' => $storeId,
-                    'customer_type' => 'GROSIR',
-                    'price_per_meter' => 18000,
-                    'min_qty' => 20,
-                    'valid_from' => now()->toDateString(),
-                    'valid_to' => null,
-                    'is_active' => 1,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ],
-            ]);
-
-
 
             /**
              * INVENTORY INITIAL
@@ -225,6 +182,100 @@ class MasterDataSeeder extends Seeder
                     'stock_on_hand' => 2000,
                     'stock_reserved' => 0,
                     'stock_available' => 2000,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+            ]);
+
+
+            /**
+             * SALES PRICING
+             * ============================
+             * RULE:
+             * - min_qty = 1   → harga normal
+             * - min_qty > 1   → harga grosir / khusus
+             */
+            DB::table('sales_pricings')->insert([
+                // ======================
+                // KAIN KATUN
+                // ======================
+                [
+                    'product_id' => $productKatunId,
+                    'store_id' => $storeId,
+                    'customer_type' => 'GROSIR',
+                    'price_per_meter' => 27000, // harga normal
+                    'min_qty' => 1,
+                    'valid_from' => now()->toDateString(),
+                    'valid_to' => null,
+                    'is_active' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'product_id' => $productKatunId,
+                    'store_id' => $storeId,
+                    'customer_type' => 'GROSIR',
+                    'price_per_meter' => 25000, // grosir
+                    'min_qty' => 10,
+                    'valid_from' => now()->toDateString(),
+                    'valid_to' => null,
+                    'is_active' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+
+                // ======================
+                // KAIN SUTRA
+                // ======================
+                [
+                    'product_id' => $productSutraId,
+                    'store_id' => $storeId,
+                    'customer_type' => 'GROSIR',
+                    'price_per_meter' => 60000,
+                    'min_qty' => 1,
+                    'valid_from' => now()->toDateString(),
+                    'valid_to' => null,
+                    'is_active' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'product_id' => $productSutraId,
+                    'store_id' => $storeId,
+                    'customer_type' => 'GROSIR',
+                    'price_per_meter' => 55000,
+                    'min_qty' => 5,
+                    'valid_from' => now()->toDateString(),
+                    'valid_to' => null,
+                    'is_active' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+
+                // ======================
+                // KAIN POLYESTER
+                // ======================
+                [
+                    'product_id' => $productPolyId,
+                    'store_id' => $storeId,
+                    'customer_type' => 'GROSIR',
+                    'price_per_meter' => 20000,
+                    'min_qty' => 1,
+                    'valid_from' => now()->toDateString(),
+                    'valid_to' => null,
+                    'is_active' => 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'product_id' => $productPolyId,
+                    'store_id' => $storeId,
+                    'customer_type' => 'GROSIR',
+                    'price_per_meter' => 18000,
+                    'min_qty' => 20,
+                    'valid_from' => now()->toDateString(),
+                    'valid_to' => null,
+                    'is_active' => 1,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ],

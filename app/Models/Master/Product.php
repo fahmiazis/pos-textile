@@ -15,6 +15,7 @@ class Product extends Model
         'brand_id',
         'category_id',
         'base_uom_id',
+        'base_price',
         'description',
         'is_active',
     ];

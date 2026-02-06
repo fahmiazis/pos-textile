@@ -15,6 +15,7 @@ class SalesOrderController extends Controller
   {
     $this->service = $service;
   }
+
   public function index(Request $request)
   {
     $query = SalesOrder::with('customer');
@@ -51,17 +52,11 @@ class SalesOrderController extends Controller
     return response()->json([
       'success' => true,
       'data' => $salesOrder,
-      'meta' => [
-        'source_document' => [
-          'type' => $salesOrder->source_document_type,
-          'id'   => $salesOrder->source_document_id,
-        ]
-      ]
     ]);
   }
 
   /**
-   * Create Sales Order (DRAFT)
+   * CREATE SALES ORDER (DRAFT)
    */
   public function store(Request $request)
   {
@@ -70,14 +65,11 @@ class SalesOrderController extends Controller
       'customer_id' => 'required|exists:customers,id',
       'order_date' => 'required|date',
       'notes' => 'nullable|string',
-      // 'source_document_type' => 'nullable|string|max:30',
-      // 'source_document_id'   => 'nullable|integer',
 
       'items' => 'required|array|min:1',
       'items.*.product_id' => 'required|exists:products,id',
       'items.*.uom_id' => 'required|exists:units,id',
       'items.*.qty_input' => 'required|numeric|min:0.001',
-      'items.*.price' => 'required|numeric|min:0',
       'items.*.discount' => 'nullable|numeric|min:0',
     ]);
 
@@ -94,89 +86,6 @@ class SalesOrderController extends Controller
     ], 201);
   }
 
-  /**
-   * Submit Sales Order (RESERVE STOCK)
-   */
-  public function submit(int $id)
-  {
-    try {
-      $salesOrder = $this->service->submit($id);
-
-      return response()->json([
-        'success' => true,
-        'message' => 'Sales order berhasil disubmit dan stok telah di-reserve',
-        'data' => [
-          'id'           => $salesOrder->id,
-          'so_number'    => $salesOrder->so_number,
-          'status'       => $salesOrder->status,
-          'store'        => [
-            'id'   => $salesOrder->store->id,
-            'name' => $salesOrder->store->name,
-          ],
-          'customer'     => [
-            'id'   => $salesOrder->customer->id,
-            'name' => $salesOrder->customer->name,
-          ],
-          'total_qty'    => $salesOrder->total_qty,
-          'total_amount' => $salesOrder->total_amount,
-          'submitted_at' => $salesOrder->submitted_at,
-        ]
-      ]);
-    } catch (\Exception $e) {
-      return response()->json([
-        'success' => false,
-        'message' => $e->getMessage(),
-        'meta' => [
-          'allowed_actions' => [
-            'submit' => false,
-            'cancel' => true,
-          ]
-        ]
-      ], 422);
-    }
-  }
-
-
-
-  /**
-   * Cancel Sales Order (RELEASE STOCK)
-   */
-  public function cancel(int $id)
-  {
-    try {
-      $salesOrder = $this->service->cancel($id);
-
-      return response()->json([
-        'success' => true,
-        'message' => 'Sales order berhasil dibatalkan dan stok dikembalikan',
-        'data' => [
-          'id'           => $salesOrder->id,
-          'so_number'    => $salesOrder->so_number,
-          'status'       => $salesOrder->status,
-          'cancelled_at' => $salesOrder->cancelled_at,
-          'store' => [
-            'id'   => $salesOrder->store->id,
-            'name' => $salesOrder->store->name,
-          ],
-          'customer' => [
-            'id'   => $salesOrder->customer->id,
-            'name' => $salesOrder->customer->name,
-          ],
-        ]
-      ]);
-    } catch (\Exception $e) {
-      return response()->json([
-        'success' => false,
-        'message' => $e->getMessage(),
-        'meta' => [
-          'allowed_actions' => [
-            'submit' => false,
-            'cancel' => false,
-          ]
-        ]
-      ], 422);
-    }
-  }
   public function update(Request $request, int $id)
   {
     $data = $request->validate([
@@ -187,7 +96,6 @@ class SalesOrderController extends Controller
       'items.*.product_id' => 'required|exists:products,id',
       'items.*.uom_id'     => 'required|exists:units,id',
       'items.*.qty_input'  => 'required|numeric|min:0.001',
-      'items.*.price'      => 'required|numeric|min:0',
       'items.*.discount'   => 'nullable|numeric|min:0',
     ]);
 
@@ -201,26 +109,6 @@ class SalesOrderController extends Controller
         'customer',
         'store'
       ]),
-    ]);
-  }
-
-  public function billable()
-  {
-    $orders = SalesOrder::with('customer')
-      ->where('status', 'submitted')
-      ->whereDoesntHave('billings', function ($q) {
-        $q->whereNotIn('status', ['cancelled']);
-      })
-      ->latest()
-      ->get();
-
-    return response()->json([
-      'success' => true,
-      'meta' => [
-        'description' => 'Sales order submitted dan belum memiliki billing aktif',
-        'total' => $orders->count(),
-      ],
-      'data' => $orders
     ]);
   }
 }
