@@ -26,6 +26,8 @@ use App\Http\Controllers\Api\Master\ProductController;
 use App\Http\Controllers\Api\Master\DiscountController;
 use App\Http\Controllers\Api\Master\VehicleController;
 use App\Http\Controllers\Api\Master\DriverController;
+use App\Http\Controllers\Api\Master\SalesPricingController;
+
 
 Route::post('/auth/login', [AuthController::class, 'login'])
     ->middleware('throttle:5,1');
@@ -130,6 +132,11 @@ Route::middleware('api.auth')->group(function () {
         Route::middleware('permission:driver.update')->put('/drivers/{driver}', [DriverController::class, 'update']);
         Route::middleware('permission:driver.delete')->delete('/drivers/{driver}', [DriverController::class, 'destroy']);
         Route::middleware('permission:driver.update')->put('/drivers/{driver}/restore', [DriverController::class, 'restore']);
+
+        Route::middleware('permission:sales_pricing.view')
+            ->get('/sales-pricings', [SalesPricingController::class, 'index']);
+        Route::middleware('permission:sales_pricing.create')
+            ->post('/sales-pricings', [SalesPricingController::class, 'store']);
     });
 });
 
@@ -142,23 +149,15 @@ Route::middleware('api.auth')->group(function () {
 use App\Http\Controllers\Api\Inventory\InventoryController;
 
 Route::middleware('api.auth')->group(function () {
-
     Route::prefix('inventory')->group(function () {
-
         Route::middleware('permission:inventory.view')
             ->get('/availability', [InventoryController::class, 'availability']);
-
         Route::middleware('permission:inventory.view')
             ->get('/movements', [InventoryController::class, 'movements']);
-
         Route::middleware('permission:inventory.manage')
             ->post('/stock-in', [InventoryController::class, 'stockIn']);
     });
 });
-
-
-
-
 
 /*
 |--------------------------------------------------------------------------
@@ -172,53 +171,39 @@ use App\Http\Controllers\Api\Sales\CollectionController;
 use App\Http\Controllers\Api\Sales\RefundController;
 
 Route::middleware('api.auth')->group(function () {
-
     Route::prefix('sales')->group(function () {
-
-
         Route::get('/orders/collected', [CollectionController::class, 'collected']);
         Route::get('/orders/billable', [SalesOrderController::class, 'billable']);
         Route::get('/orders', [SalesOrderController::class, 'index']);
         Route::get('/orders/{id}', [SalesOrderController::class, 'show']);
-
         Route::middleware('permission:sales_order.create')
             ->post('/orders', [SalesOrderController::class, 'store']);
-
         Route::middleware('permission:sales_order.update')
             ->put('/orders/{id}', [SalesOrderController::class, 'update']);
-
         Route::middleware('permission:sales_order.submit')
             ->post('/orders/{id}/submit', [SalesOrderController::class, 'submit']);
-
         Route::middleware('permission:sales_order.cancel')
             ->post('/orders/{id}/cancel', [SalesOrderController::class, 'cancel']);
-
         Route::middleware('permission:billing.create')
             ->post('/billings', [BillingController::class, 'store']);
-
         Route::middleware('permission:collection.create')
             ->post('/collections', [CollectionController::class, 'store']);
     });
 });
 
-
 /*
 |--------------------------------------------------------------------------
-| Purhase / Billing
+ Billing
 |--------------------------------------------------------------------------
 */
 Route::middleware('api.auth')->prefix('billings')->group(function () {
-
     Route::get('/', [BillingController::class, 'index']);
-
     Route::middleware('permission:billing.create')
         ->post('/', [BillingController::class, 'store']);
 });
 
-
 Route::middleware(['api.auth', 'permission:collection.create'])
     ->post('/billings/{billing}/collect', [CollectionController::class, 'store']);
-
 Route::middleware(['api.auth', 'permission:refund.create'])
     ->post('/sales-orders/{salesOrder}/refund/full', [RefundController::class, 'full']);
 
@@ -231,3 +216,68 @@ Route::post(
     '/sales-orders/{id}/refund/full',
     [\App\Http\Controllers\Api\Sales\RefundController::class, 'full']
 );
+
+
+/*|--------------------------------------------------------------------------
+| Purchase Orders
+|--------------------------------------------------------------------------
+*/
+
+use App\Http\Controllers\Api\Purchase\PurchaseOrderController;
+
+Route::middleware('api.auth')->group(function () {
+    Route::prefix('purchase')->group(function () {
+        Route::middleware('permission:purchase_order.view')
+            ->get('/orders', [PurchaseOrderController::class, 'index']);
+        Route::middleware('permission:purchase_order.create')
+            ->post('/orders', [PurchaseOrderController::class, 'store']);
+        Route::middleware('permission:purchase_order.update')
+            ->put('/orders/{id}', [PurchaseOrderController::class, 'update']);
+        Route::middleware('permission:purchase_order.view')
+            ->get('/orders/{id}', [PurchaseOrderController::class, 'show']);
+        Route::middleware('permission:purchase_order.submit')
+            ->post('/orders/{id}/submit', [PurchaseOrderController::class, 'submit']);
+        Route::middleware('permission:purchase_order.cancel')
+            ->post('/orders/{id}/cancel', [PurchaseOrderController::class, 'cancel']);
+        Route::post('/orders/{id}/receive', [PurchaseOrderController::class, 'receive']);
+    });
+});
+
+
+/*|--------------------------------------------------------------------------
+| Purchase Billings
+|--------------------------------------------------------------------------*/
+
+use App\Http\Controllers\Api\Purchase\PurchaseBillingController;
+
+Route::middleware('api.auth')->prefix('purchase')->group(function () {
+
+    Route::get('/billings', [PurchaseBillingController::class, 'index']);
+    Route::post('/billings/from-po/{id}', [PurchaseBillingController::class, 'createFromPo']);
+});
+
+/*|--------------------------------------------------------------------------
+| Purchase Payments
+|--------------------------------------------------------------------------*/
+
+use App\Http\Controllers\Api\Purchase\PurchasePaymentController;
+
+Route::middleware('api.auth')
+    ->prefix('purchase')
+    ->group(function () {
+
+        Route::get(
+            '/payments',
+            [PurchasePaymentController::class, 'index']
+        );
+
+        Route::post(
+            '/payments',
+            [PurchasePaymentController::class, 'store']
+        );
+
+        Route::get(
+            '/payments/{id}',
+            [PurchasePaymentController::class, 'show']
+        );
+    });
