@@ -147,6 +147,7 @@ Route::middleware('api.auth')->group(function () {
 */
 
 use App\Http\Controllers\Api\Inventory\InventoryController;
+
 Route::middleware('api.auth')->group(function () {
     Route::prefix('inventory')->group(function () {
         Route::middleware('permission:inventory.view')
@@ -168,6 +169,7 @@ use App\Http\Controllers\Api\Sales\SalesOrderController;
 use App\Http\Controllers\Api\Sales\BillingController;
 use App\Http\Controllers\Api\Sales\CollectionController;
 use App\Http\Controllers\Api\Sales\RefundController;
+
 Route::middleware('api.auth')->group(function () {
     Route::prefix('sales')->group(function () {
         Route::get('/orders/collected', [CollectionController::class, 'collected']);
@@ -222,6 +224,7 @@ Route::post(
 */
 
 use App\Http\Controllers\Api\Purchase\PurchaseOrderController;
+
 Route::middleware('api.auth')->group(function () {
     Route::prefix('purchase')->group(function () {
         Route::middleware('permission:purchase_order.view')
@@ -239,3 +242,42 @@ Route::middleware('api.auth')->group(function () {
         Route::post('/orders/{id}/receive', [PurchaseOrderController::class, 'receive']);
     });
 });
+
+
+/*|--------------------------------------------------------------------------
+| Purchase Billings
+|--------------------------------------------------------------------------*/
+
+use App\Http\Controllers\Api\Purchase\PurchaseBillingController;
+
+Route::middleware('api.auth')->prefix('purchase')->group(function () {
+
+    Route::get('/billings', [PurchaseBillingController::class, 'index']);
+    Route::post('/billings/from-po/{id}', [PurchaseBillingController::class, 'createFromPo']);
+});
+
+/*|--------------------------------------------------------------------------
+| Purchase Payments
+|--------------------------------------------------------------------------*/
+
+use App\Http\Controllers\Api\Purchase\PurchasePaymentController;
+
+Route::middleware('api.auth')
+    ->prefix('purchase')
+    ->group(function () {
+
+        Route::get(
+            '/payments',
+            [PurchasePaymentController::class, 'index']
+        );
+
+        Route::post(
+            '/payments',
+            [PurchasePaymentController::class, 'store']
+        );
+
+        Route::get(
+            '/payments/{id}',
+            [PurchasePaymentController::class, 'show']
+        );
+    });
