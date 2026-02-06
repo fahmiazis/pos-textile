@@ -147,25 +147,16 @@ Route::middleware('api.auth')->group(function () {
 */
 
 use App\Http\Controllers\Api\Inventory\InventoryController;
-
 Route::middleware('api.auth')->group(function () {
-
     Route::prefix('inventory')->group(function () {
-
         Route::middleware('permission:inventory.view')
             ->get('/availability', [InventoryController::class, 'availability']);
-
         Route::middleware('permission:inventory.view')
             ->get('/movements', [InventoryController::class, 'movements']);
-
         Route::middleware('permission:inventory.manage')
             ->post('/stock-in', [InventoryController::class, 'stockIn']);
     });
 });
-
-
-
-
 
 /*
 |--------------------------------------------------------------------------
@@ -177,55 +168,40 @@ use App\Http\Controllers\Api\Sales\SalesOrderController;
 use App\Http\Controllers\Api\Sales\BillingController;
 use App\Http\Controllers\Api\Sales\CollectionController;
 use App\Http\Controllers\Api\Sales\RefundController;
-
 Route::middleware('api.auth')->group(function () {
-
     Route::prefix('sales')->group(function () {
-
-
         Route::get('/orders/collected', [CollectionController::class, 'collected']);
         Route::get('/orders/billable', [SalesOrderController::class, 'billable']);
         Route::get('/orders', [SalesOrderController::class, 'index']);
         Route::get('/orders/{id}', [SalesOrderController::class, 'show']);
-
         Route::middleware('permission:sales_order.create')
             ->post('/orders', [SalesOrderController::class, 'store']);
-
         Route::middleware('permission:sales_order.update')
             ->put('/orders/{id}', [SalesOrderController::class, 'update']);
-
         Route::middleware('permission:sales_order.submit')
             ->post('/orders/{id}/submit', [SalesOrderController::class, 'submit']);
-
         Route::middleware('permission:sales_order.cancel')
             ->post('/orders/{id}/cancel', [SalesOrderController::class, 'cancel']);
-
         Route::middleware('permission:billing.create')
             ->post('/billings', [BillingController::class, 'store']);
-
         Route::middleware('permission:collection.create')
             ->post('/collections', [CollectionController::class, 'store']);
     });
 });
 
-
 /*
 |--------------------------------------------------------------------------
-| Purhase / Billing
+ Billing
 |--------------------------------------------------------------------------
 */
 Route::middleware('api.auth')->prefix('billings')->group(function () {
-
     Route::get('/', [BillingController::class, 'index']);
-
     Route::middleware('permission:billing.create')
         ->post('/', [BillingController::class, 'store']);
 });
 
-
 Route::middleware(['api.auth', 'permission:collection.create'])
     ->post('/billings/{billing}/collect', [CollectionController::class, 'store']);
-
 Route::middleware(['api.auth', 'permission:refund.create'])
     ->post('/sales-orders/{salesOrder}/refund/full', [RefundController::class, 'full']);
 
@@ -238,3 +214,28 @@ Route::post(
     '/sales-orders/{id}/refund/full',
     [\App\Http\Controllers\Api\Sales\RefundController::class, 'full']
 );
+
+
+/*|--------------------------------------------------------------------------
+| Purchase Orders
+|--------------------------------------------------------------------------
+*/
+
+use App\Http\Controllers\Api\Purchase\PurchaseOrderController;
+Route::middleware('api.auth')->group(function () {
+    Route::prefix('purchase')->group(function () {
+        Route::middleware('permission:purchase_order.view')
+            ->get('/orders', [PurchaseOrderController::class, 'index']);
+        Route::middleware('permission:purchase_order.create')
+            ->post('/orders', [PurchaseOrderController::class, 'store']);
+        Route::middleware('permission:purchase_order.update')
+            ->put('/orders/{id}', [PurchaseOrderController::class, 'update']);
+        Route::middleware('permission:purchase_order.view')
+            ->get('/orders/{id}', [PurchaseOrderController::class, 'show']);
+        Route::middleware('permission:purchase_order.submit')
+            ->post('/orders/{id}/submit', [PurchaseOrderController::class, 'submit']);
+        Route::middleware('permission:purchase_order.cancel')
+            ->post('/orders/{id}/cancel', [PurchaseOrderController::class, 'cancel']);
+        Route::post('/orders/{id}/receive', [PurchaseOrderController::class, 'receive']);
+    });
+});
