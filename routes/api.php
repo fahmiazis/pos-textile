@@ -171,6 +171,9 @@ Route::middleware('api.auth')
         Route::middleware('permission:user.update')
             ->patch('/users/{user}/reset-password', [UserController::class, 'resetPassword']);
 
+        Route::middleware('permission:user.update')
+            ->put('/users/{user}/permissions', [UserController::class, 'syncDirectPermissions']);
+
         /* ================= ROLES ================= */
         Route::middleware('permission:role.view')
             ->get('/roles', [RoleController::class, 'index']);

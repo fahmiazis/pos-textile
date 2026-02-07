@@ -202,4 +202,35 @@ class UserController extends Controller
             ]
         ]);
     }
+    public function syncDirectPermissions(Request $request, User $user)
+    {
+        if (!request()->user()->hasRole('superadmin')) {
+            return response()->json([
+                'message' => 'Only superadmin can assign direct permissions'
+            ], 403);
+        }
+
+        $data = $request->validate([
+            'permissions'   => ['required', 'array'],
+            'permissions.*' => ['string', 'exists:permissions,name'],
+        ]);
+
+        $before = $user->getDirectPermissions()->pluck('name');
+
+        $user->syncPermissions($data['permissions']);
+
+        return response()->json([
+            'message' => 'Direct permissions updated',
+            'data' => [
+                'user' => [
+                    'id'    => $user->id,
+                    'name'  => $user->name,
+                    'email' => $user->email,
+                ],
+                'before' => $before,
+                'after'  => $user->getDirectPermissions()->pluck('name'),
+                'effective' => $user->getAllPermissions()->pluck('name'),
+            ]
+        ]);
+    }
 }
