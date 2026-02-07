@@ -26,10 +26,9 @@ class BrandController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:10|unique:brands,code',
-            'name' => 'required|string|max:100',
+            'name'        => 'required|string|max:100',
             'description' => 'nullable|string|max:150',
-            'is_activated' => 'boolean',
+            'is_active'   => 'boolean',
         ]);
 
         $brand = $this->brandService->create($validated);
@@ -37,7 +36,7 @@ class BrandController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Brand created successfully',
-            'data' => $brand,
+            'data'    => $brand,
         ], 201);
     }
 
@@ -48,17 +47,16 @@ class BrandController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Brand detail',
-            'data' => $brand,
+            'data'    => $brand,
         ]);
     }
 
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:10|unique:brands,code,' . $id,
-            'name' => 'required|string|max:100',
+            'name'        => 'required|string|max:100',
             'description' => 'nullable|string|max:150',
-            'is_activated' => 'boolean',
+            'is_active'   => 'boolean',
         ]);
 
         $brand = $this->brandService->update($id, $validated);
@@ -66,7 +64,7 @@ class BrandController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Brand updated successfully',
-            'data' => $brand,
+            'data'    => $brand,
         ]);
     }
 

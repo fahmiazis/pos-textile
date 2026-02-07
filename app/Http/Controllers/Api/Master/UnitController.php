@@ -20,7 +20,7 @@ class UnitController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'List units',
-            'data' => $units,
+            'data'    => $units,
         ]);
     }
 
@@ -28,11 +28,10 @@ class UnitController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:10|unique:units,code',
-            'name' => 'required|string|max:30',
+            'name'         => 'required|string|max:30',
             'base_unit_id' => 'nullable|exists:units,id',
-            'multiplier' => 'required|numeric|min:0',
-            'is_active' => 'boolean',
+            'multiplier'   => 'required|numeric|min:0',
+            'is_active'    => 'boolean',
         ]);
 
         $unit = $this->unitService->create($validated);
@@ -40,7 +39,7 @@ class UnitController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Unit created successfully',
-            'data' => $unit,
+            'data'    => $unit,
         ], 201);
     }
 
@@ -52,7 +51,7 @@ class UnitController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Unit detail',
-            'data' => $unit,
+            'data'    => $unit,
         ]);
     }
 
@@ -60,11 +59,10 @@ class UnitController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:10|unique:units,code,' . $id,
-            'name' => 'required|string|max:30',
+            'name'         => 'required|string|max:30',
             'base_unit_id' => 'nullable|exists:units,id',
-            'multiplier' => 'required|numeric|min:0',
-            'is_active' => 'boolean',
+            'multiplier'   => 'required|numeric|min:0',
+            'is_active'    => 'boolean',
         ]);
 
         $unit = $this->unitService->update($id, $validated);
@@ -72,11 +70,11 @@ class UnitController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Unit updated successfully',
-            'data' => $unit,
+            'data'    => $unit,
         ]);
     }
 
-    // DELETE /api/master/units/{id} (soft delete)
+    // DELETE /api/master/units/{id}
     public function destroy($id)
     {
         $this->unitService->delete($id);
@@ -95,7 +93,7 @@ class UnitController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Unit restored successfully',
-            'data' => $unit,
+            'data'    => $unit,
         ]);
     }
 }

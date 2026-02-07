@@ -20,7 +20,7 @@ class SupplierController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'List suppliers',
-            'data' => $suppliers,
+            'data'    => $suppliers,
         ]);
     }
 
@@ -28,13 +28,12 @@ class SupplierController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:20|unique:suppliers,code',
-            'name' => 'required|string|max:150',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:255',
+            'name'              => 'required|string|max:150',
+            'phone'             => 'nullable|string|max:20',
+            'address'           => 'nullable|string|max:255',
             'payment_term_days' => 'nullable|integer|min:0',
-            'default_store_id' => 'nullable|exists:stores,id',
-            'is_active' => 'boolean',
+            'default_store_id'  => 'nullable|exists:stores,id',
+            'is_active'         => 'boolean',
         ]);
 
         $supplier = $this->supplierService->create($validated);
@@ -42,7 +41,7 @@ class SupplierController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Supplier created successfully',
-            'data' => $supplier,
+            'data'    => $supplier,
         ], 201);
     }
 
@@ -54,7 +53,7 @@ class SupplierController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Supplier detail',
-            'data' => $supplier,
+            'data'    => $supplier,
         ]);
     }
 
@@ -62,13 +61,12 @@ class SupplierController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:20|unique:suppliers,code,' . $id,
-            'name' => 'required|string|max:150',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:255',
+            'name'              => 'required|string|max:150',
+            'phone'             => 'nullable|string|max:20',
+            'address'           => 'nullable|string|max:255',
             'payment_term_days' => 'nullable|integer|min:0',
-            'default_store_id' => 'nullable|exists:stores,id',
-            'is_active' => 'boolean',
+            'default_store_id'  => 'nullable|exists:stores,id',
+            'is_active'         => 'boolean',
         ]);
 
         $supplier = $this->supplierService->update($id, $validated);
@@ -76,11 +74,11 @@ class SupplierController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Supplier updated successfully',
-            'data' => $supplier,
+            'data'    => $supplier,
         ]);
     }
 
-    // DELETE /api/master/suppliers/{id} (soft delete)
+    // DELETE /api/master/suppliers/{id}
     public function destroy($id)
     {
         $this->supplierService->delete($id);
@@ -99,7 +97,7 @@ class SupplierController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Supplier restored successfully',
-            'data' => $supplier,
+            'data'    => $supplier,
         ]);
     }
 }

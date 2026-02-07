@@ -20,7 +20,7 @@ class DiscountController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'List discounts',
-            'data' => $discounts,
+            'data'    => $discounts,
         ]);
     }
 
@@ -28,14 +28,13 @@ class DiscountController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:20|unique:discounts,code',
-            'name' => 'required|string|max:100',
-            'discount_type' => 'required|in:PERCENT,FIXED',
-            'discount_value' => 'required|numeric|min:0',
-            'store_id' => 'nullable|exists:stores,id',
-            'start_date' => 'required|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-            'is_active' => 'boolean',
+            'name'            => 'required|string|max:100',
+            'discount_type'   => 'required|in:PERCENT,FIXED',
+            'discount_value'  => 'required|numeric|min:0',
+            'store_id'        => 'nullable|exists:stores,id',
+            'start_date'      => 'required|date',
+            'end_date'        => 'nullable|date|after_or_equal:start_date',
+            'is_active'       => 'boolean',
         ]);
 
         $discount = $this->discountService->create($validated);
@@ -43,7 +42,7 @@ class DiscountController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Discount created successfully',
-            'data' => $discount,
+            'data'    => $discount,
         ], 201);
     }
 
@@ -55,7 +54,7 @@ class DiscountController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Discount detail',
-            'data' => $discount,
+            'data'    => $discount,
         ]);
     }
 
@@ -63,14 +62,13 @@ class DiscountController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:20|unique:discounts,code,' . $id,
-            'name' => 'required|string|max:100',
-            'discount_type' => 'required|in:PERCENT,FIXED',
-            'discount_value' => 'required|numeric|min:0',
-            'store_id' => 'nullable|exists:stores,id',
-            'start_date' => 'required|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-            'is_active' => 'boolean',
+            'name'            => 'required|string|max:100',
+            'discount_type'   => 'required|in:PERCENT,FIXED',
+            'discount_value'  => 'required|numeric|min:0',
+            'store_id'        => 'nullable|exists:stores,id',
+            'start_date'      => 'required|date',
+            'end_date'        => 'nullable|date|after_or_equal:start_date',
+            'is_active'       => 'boolean',
         ]);
 
         $discount = $this->discountService->update($id, $validated);
@@ -78,11 +76,11 @@ class DiscountController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Discount updated successfully',
-            'data' => $discount,
+            'data'    => $discount,
         ]);
     }
 
-    // DELETE /api/master/discounts/{id} (soft delete)
+    // DELETE /api/master/discounts/{id}
     public function destroy($id)
     {
         $this->discountService->delete($id);
@@ -101,7 +99,7 @@ class DiscountController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Discount restored successfully',
-            'data' => $discount,
+            'data'    => $discount,
         ]);
     }
 }

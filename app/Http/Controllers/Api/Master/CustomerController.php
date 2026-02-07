@@ -20,7 +20,7 @@ class CustomerController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'List customers',
-            'data' => $customers,
+            'data'    => $customers,
         ]);
     }
 
@@ -28,13 +28,12 @@ class CustomerController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:20|unique:customers,code',
-            'name' => 'required|string|max:150',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:255',
-            'customer_type' => 'required|in:RETAIL,GROSIR,PROJECT',
+            'name'             => 'required|string|max:150',
+            'phone'            => 'nullable|string|max:20',
+            'address'          => 'nullable|string|max:255',
+            'customer_type'    => 'required|in:RETAIL,GROSIR,PROJECT',
             'default_store_id' => 'nullable|exists:stores,id',
-            'is_active' => 'boolean',
+            'is_active'        => 'boolean',
         ]);
 
         $customer = $this->customerService->create($validated);
@@ -42,7 +41,7 @@ class CustomerController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Customer created successfully',
-            'data' => $customer,
+            'data'    => $customer,
         ], 201);
     }
 
@@ -54,7 +53,7 @@ class CustomerController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Customer detail',
-            'data' => $customer,
+            'data'    => $customer,
         ]);
     }
 
@@ -62,13 +61,12 @@ class CustomerController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:20|unique:customers,code,' . $id,
-            'name' => 'required|string|max:150',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:255',
-            'customer_type' => 'required|in:RETAIL,GROSIR,PROJECT',
+            'name'             => 'required|string|max:150',
+            'phone'            => 'nullable|string|max:20',
+            'address'          => 'nullable|string|max:255',
+            'customer_type'    => 'required|in:RETAIL,GROSIR,PROJECT',
             'default_store_id' => 'nullable|exists:stores,id',
-            'is_active' => 'boolean',
+            'is_active'        => 'boolean',
         ]);
 
         $customer = $this->customerService->update($id, $validated);
@@ -76,11 +74,11 @@ class CustomerController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Customer updated successfully',
-            'data' => $customer,
+            'data'    => $customer,
         ]);
     }
 
-    // DELETE /api/master/customers/{id} (soft delete)
+    // DELETE /api/master/customers/{id}
     public function destroy($id)
     {
         $this->customerService->delete($id);
@@ -99,7 +97,7 @@ class CustomerController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Customer restored successfully',
-            'data' => $customer,
+            'data'    => $customer,
         ]);
     }
 }

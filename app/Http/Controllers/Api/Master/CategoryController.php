@@ -20,7 +20,7 @@ class CategoryController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'List categories',
-            'data' => $categories,
+            'data'    => $categories,
         ]);
     }
 
@@ -28,8 +28,7 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:20|unique:categories,code',
-            'name' => 'required|string|max:100',
+            'name'      => 'required|string|max:100',
             'is_active' => 'boolean',
         ]);
 
@@ -38,7 +37,7 @@ class CategoryController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Category created successfully',
-            'data' => $category,
+            'data'    => $category,
         ], 201);
     }
 
@@ -50,7 +49,7 @@ class CategoryController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Category detail',
-            'data' => $category,
+            'data'    => $category,
         ]);
     }
 
@@ -58,8 +57,7 @@ class CategoryController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:20|unique:categories,code,' . $id,
-            'name' => 'required|string|max:100',
+            'name'      => 'required|string|max:100',
             'is_active' => 'boolean',
         ]);
 
@@ -68,11 +66,11 @@ class CategoryController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Category updated successfully',
-            'data' => $category,
+            'data'    => $category,
         ]);
     }
 
-    // DELETE /api/master/categories/{id} (soft delete)
+    // DELETE /api/master/categories/{id}
     public function destroy($id)
     {
         $this->categoryService->delete($id);
@@ -91,7 +89,7 @@ class CategoryController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Category restored successfully',
-            'data' => $category,
+            'data'    => $category,
         ]);
     }
 }
