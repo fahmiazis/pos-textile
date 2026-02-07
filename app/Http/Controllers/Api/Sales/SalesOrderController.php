@@ -111,4 +111,73 @@ class SalesOrderController extends Controller
       ]),
     ]);
   }
+
+
+
+  /**
+   * SUBMIT SALES ORDER
+   */
+  public function submit(int $id)
+  {
+    try {
+      $order = $this->service->submit($id);
+
+      return response()->json([
+        'success' => true,
+        'message' => 'Sales order berhasil disubmit',
+        'data' => $order->load([
+          'items.product',
+          'customer',
+          'store'
+        ])
+      ]);
+    } catch (\Exception $e) {
+      return response()->json([
+        'success' => false,
+        'message' => $e->getMessage()
+      ], 400);
+    }
+  }
+
+  /**
+   * CANCEL SALES ORDER
+   */
+  public function cancel(int $id)
+  {
+    try {
+      $order = $this->service->cancel($id);
+
+      return response()->json([
+        'success' => true,
+        'message' => 'Sales order berhasil dibatalkan',
+        'data' => $order
+      ]);
+    } catch (\Exception $e) {
+      return response()->json([
+        'success' => false,
+        'message' => $e->getMessage()
+      ], 400);
+    }
+  }
+
+
+  public function billable()
+  {
+    $orders = SalesOrder::with('customer')
+      ->where('status', 'submitted')
+      ->whereDoesntHave('billings', function ($q) {
+        $q->whereNotIn('status', ['cancelled']);
+      })
+      ->latest()
+      ->get();
+
+    return response()->json([
+      'success' => true,
+      'meta' => [
+        'description' => 'Sales order submitted dan belum memiliki billing aktif',
+        'total' => $orders->count(),
+      ],
+      'data' => $orders
+    ]);
+  }
 }
