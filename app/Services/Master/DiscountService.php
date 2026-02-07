@@ -11,38 +11,33 @@ class DiscountService
     {
         $query = Discount::with('store');
 
-        // search (code / name)
         if (!empty($params['search'])) {
             $search = $params['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
-                  ->orWhere('name', 'like', "%{$search}%");
+                    ->orWhere('name', 'like', "%{$search}%");
             });
         }
 
-        // filter active
         if (isset($params['is_active'])) {
             $query->where('is_active', $params['is_active']);
         }
 
-        // filter discount type
         if (!empty($params['discount_type'])) {
             $query->where('discount_type', $params['discount_type']);
         }
 
-        // filter store
         if (!empty($params['store_id'])) {
             $query->where('store_id', $params['store_id']);
         }
 
-        // filter date active (today inside range)
         if (!empty($params['active_today']) && $params['active_today']) {
             $today = now()->toDateString();
             $query->whereDate('start_date', '<=', $today)
-                  ->where(function ($q) use ($today) {
-                      $q->whereNull('end_date')
+                ->where(function ($q) use ($today) {
+                    $q->whereNull('end_date')
                         ->orWhereDate('end_date', '>=', $today);
-                  });
+                });
         }
 
         return $query
@@ -52,7 +47,12 @@ class DiscountService
 
     public function create(array $data)
     {
-        return Discount::create($data);
+        return DB::transaction(function () use ($data) {
+            $data['code']      = $this->generateCode();
+            $data['is_active'] = $data['is_active'] ?? true;
+
+            return Discount::create($data);
+        });
     }
 
     public function find(int $id)
@@ -64,6 +64,7 @@ class DiscountService
     {
         $discount = Discount::findOrFail($id);
         $discount->update($data);
+
         return $discount;
     }
 
@@ -103,5 +104,26 @@ class DiscountService
 
             return $discount;
         });
+    }
+
+    /**
+     * Generate auto code: DISC-0001
+     */
+    protected function generateCode(): string
+    {
+        $prefix = 'DISC-';
+
+        $lastCode = Discount::withTrashed()
+            ->where('code', 'like', $prefix . '%')
+            ->orderBy('code', 'desc')
+            ->value('code');
+
+        if (!$lastCode) {
+            return $prefix . '0001';
+        }
+
+        $number = (int) str_replace($prefix, '', $lastCode);
+
+        return $prefix . str_pad($number + 1, 4, '0', STR_PAD_LEFT);
     }
 }
