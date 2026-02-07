@@ -11,27 +11,23 @@ class CustomerService
     {
         $query = Customer::with('defaultStore');
 
-        // search (code, name, phone)
         if (!empty($params['search'])) {
             $search = $params['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
-                  ->orWhere('name', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
+                    ->orWhere('name', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%");
             });
         }
 
-        // filter active
         if (isset($params['is_active'])) {
             $query->where('is_active', $params['is_active']);
         }
 
-        // filter customer type
         if (!empty($params['customer_type'])) {
             $query->where('customer_type', $params['customer_type']);
         }
 
-        // filter default store
         if (!empty($params['default_store_id'])) {
             $query->where('default_store_id', $params['default_store_id']);
         }
@@ -43,7 +39,12 @@ class CustomerService
 
     public function create(array $data)
     {
-        return Customer::create($data);
+        return DB::transaction(function () use ($data) {
+            $data['code']      = $this->generateCode();
+            $data['is_active'] = $data['is_active'] ?? true;
+
+            return Customer::create($data);
+        });
     }
 
     public function find(int $id)
@@ -55,6 +56,7 @@ class CustomerService
     {
         $customer = Customer::findOrFail($id);
         $customer->update($data);
+
         return $customer;
     }
 
@@ -94,5 +96,26 @@ class CustomerService
 
             return $customer;
         });
+    }
+
+    /**
+     * Generate auto code: CUST-0001
+     */
+    protected function generateCode(): string
+    {
+        $prefix = 'CUST-';
+
+        $lastCode = Customer::withTrashed()
+            ->where('code', 'like', $prefix . '%')
+            ->orderBy('code', 'desc')
+            ->value('code');
+
+        if (!$lastCode) {
+            return $prefix . '0001';
+        }
+
+        $number = (int) str_replace($prefix, '', $lastCode);
+
+        return $prefix . str_pad($number + 1, 4, '0', STR_PAD_LEFT);
     }
 }
