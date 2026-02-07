@@ -11,31 +11,26 @@ class ProductService
     {
         $query = Product::with(['brand', 'category', 'baseUnit']);
 
-        // search (sku, name)
         if (!empty($params['search'])) {
             $search = $params['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('sku', 'like', "%{$search}%")
-                  ->orWhere('name', 'like', "%{$search}%");
+                    ->orWhere('name', 'like', "%{$search}%");
             });
         }
 
-        // filter active
         if (isset($params['is_active'])) {
             $query->where('is_active', $params['is_active']);
         }
 
-        // filter brand
         if (!empty($params['brand_id'])) {
             $query->where('brand_id', $params['brand_id']);
         }
 
-        // filter category
         if (!empty($params['category_id'])) {
             $query->where('category_id', $params['category_id']);
         }
 
-        // filter base unit
         if (!empty($params['base_uom_id'])) {
             $query->where('base_uom_id', $params['base_uom_id']);
         }
@@ -47,18 +42,25 @@ class ProductService
 
     public function create(array $data)
     {
-        return Product::create($data);
+        return DB::transaction(function () use ($data) {
+            $data['sku']       = $this->generateSku();
+            $data['is_active'] = $data['is_active'] ?? true;
+
+            return Product::create($data);
+        });
     }
 
     public function find(int $id)
     {
-        return Product::with(['brand', 'category', 'baseUnit'])->findOrFail($id);
+        return Product::with(['brand', 'category', 'baseUnit'])
+            ->findOrFail($id);
     }
 
     public function update(int $id, array $data)
     {
         $product = Product::findOrFail($id);
         $product->update($data);
+
         return $product;
     }
 
@@ -98,5 +100,26 @@ class ProductService
 
             return $product;
         });
+    }
+
+    /**
+     * Generate auto SKU: PRD-000001
+     */
+    protected function generateSku(): string
+    {
+        $prefix = 'PRD-';
+
+        $lastSku = Product::withTrashed()
+            ->where('sku', 'like', $prefix . '%')
+            ->orderBy('sku', 'desc')
+            ->value('sku');
+
+        if (!$lastSku) {
+            return $prefix . '000001';
+        }
+
+        $number = (int) str_replace($prefix, '', $lastSku);
+
+        return $prefix . str_pad($number + 1, 6, '0', STR_PAD_LEFT);
     }
 }

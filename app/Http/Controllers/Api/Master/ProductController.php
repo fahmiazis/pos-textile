@@ -20,7 +20,7 @@ class ProductController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'List products',
-            'data' => $products,
+            'data'    => $products,
         ]);
     }
 
@@ -28,21 +28,22 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'sku' => 'required|string|max:30|unique:products,sku',
-            'name' => 'required|string|max:150',
-            'brand_id' => 'required|exists:brands,id',
+            'name'        => 'required|string|max:150',
+            'brand_id'    => 'required|exists:brands,id',
             'category_id' => 'required|exists:categories,id',
             'base_uom_id' => 'required|exists:units,id',
+            'base_price'  => 'required|numeric|min:0',
             'description' => 'nullable|string|max:255',
-            'is_active' => 'boolean',
+            'is_active'   => 'boolean',
         ]);
+
 
         $product = $this->productService->create($validated);
 
         return response()->json([
             'success' => true,
             'message' => 'Product created successfully',
-            'data' => $product,
+            'data'    => $product,
         ], 201);
     }
 
@@ -54,7 +55,7 @@ class ProductController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Product detail',
-            'data' => $product,
+            'data'    => $product,
         ]);
     }
 
@@ -62,25 +63,26 @@ class ProductController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'sku' => 'required|string|max:30|unique:products,sku,' . $id,
-            'name' => 'required|string|max:150',
-            'brand_id' => 'required|exists:brands,id',
+            'name'        => 'required|string|max:150',
+            'brand_id'    => 'required|exists:brands,id',
             'category_id' => 'required|exists:categories,id',
             'base_uom_id' => 'required|exists:units,id',
+            'base_price'  => 'required|numeric|min:0',
             'description' => 'nullable|string|max:255',
-            'is_active' => 'boolean',
+            'is_active'   => 'boolean',
         ]);
+
 
         $product = $this->productService->update($id, $validated);
 
         return response()->json([
             'success' => true,
             'message' => 'Product updated successfully',
-            'data' => $product,
+            'data'    => $product,
         ]);
     }
 
-    // DELETE /api/master/products/{id} (soft delete)
+    // DELETE /api/master/products/{id}
     public function destroy($id)
     {
         $this->productService->delete($id);
@@ -99,7 +101,7 @@ class ProductController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Product restored successfully',
-            'data' => $product,
+            'data'    => $product,
         ]);
     }
 }
