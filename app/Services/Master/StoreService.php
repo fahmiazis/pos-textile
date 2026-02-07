@@ -11,16 +11,14 @@ class StoreService
     {
         $query = Store::query();
 
-        // search (code, name)
         if (!empty($params['search'])) {
             $search = $params['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
-                  ->orWhere('name', 'like', "%{$search}%");
+                    ->orWhere('name', 'like', "%{$search}%");
             });
         }
 
-        // filter active
         if (isset($params['is_active'])) {
             $query->where('is_active', $params['is_active']);
         }
@@ -32,7 +30,12 @@ class StoreService
 
     public function create(array $data)
     {
-        return Store::create($data);
+        return DB::transaction(function () use ($data) {
+            $data['code']      = $this->generateCode();
+            $data['is_active'] = $data['is_active'] ?? true;
+
+            return Store::create($data);
+        });
     }
 
     public function find(int $id)
@@ -42,8 +45,9 @@ class StoreService
 
     public function update(int $id, array $data)
     {
-        $store = $this->find($id);
+        $store = Store::findOrFail($id);
         $store->update($data);
+
         return $store;
     }
 
@@ -81,5 +85,26 @@ class StoreService
 
             return $store;
         });
+    }
+
+    /**
+     * Generate auto code: STR-0001
+     */
+    protected function generateCode(): string
+    {
+        $prefix = 'STR-';
+
+        $lastCode = Store::withTrashed()
+            ->where('code', 'like', $prefix . '%')
+            ->orderBy('code', 'desc')
+            ->value('code');
+
+        if (!$lastCode) {
+            return $prefix . '0001';
+        }
+
+        $number = (int) str_replace($prefix, '', $lastCode);
+
+        return $prefix . str_pad($number + 1, 4, '0', STR_PAD_LEFT);
     }
 }

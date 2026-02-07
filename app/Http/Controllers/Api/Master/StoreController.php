@@ -20,7 +20,7 @@ class StoreController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'List stores',
-            'data' => $stores,
+            'data'    => $stores,
         ]);
     }
 
@@ -28,10 +28,9 @@ class StoreController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:10|unique:stores,code',
-            'name' => 'required|string|max:100',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:255',
+            'name'      => 'required|string|max:100',
+            'phone'     => 'nullable|string|max:20',
+            'address'   => 'nullable|string|max:255',
             'is_active' => 'boolean',
         ]);
 
@@ -40,7 +39,7 @@ class StoreController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Store created successfully',
-            'data' => $store,
+            'data'    => $store,
         ], 201);
     }
 
@@ -52,7 +51,7 @@ class StoreController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Store detail',
-            'data' => $store,
+            'data'    => $store,
         ]);
     }
 
@@ -60,10 +59,9 @@ class StoreController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'code' => 'required|string|max:10|unique:stores,code,' . $id,
-            'name' => 'required|string|max:100',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:255',
+            'name'      => 'required|string|max:100',
+            'phone'     => 'nullable|string|max:20',
+            'address'   => 'nullable|string|max:255',
             'is_active' => 'boolean',
         ]);
 
@@ -72,11 +70,11 @@ class StoreController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Store updated successfully',
-            'data' => $store,
+            'data'    => $store,
         ]);
     }
 
-    // DELETE /api/master/stores/{id} (soft delete)
+    // DELETE /api/master/stores/{id}
     public function destroy($id)
     {
         $this->storeService->delete($id);
@@ -95,7 +93,7 @@ class StoreController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Store restored successfully',
-            'data' => $store,
+            'data'    => $store,
         ]);
     }
 }
