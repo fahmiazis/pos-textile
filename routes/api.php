@@ -38,7 +38,7 @@ Route::middleware('api.auth')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 
     Route::get('/me', function () {
-        $user = auth()->user();
+        $user = request()->user();
 
         return response()->json([
             'id' => $user->id,
@@ -139,6 +139,64 @@ Route::middleware('api.auth')->group(function () {
             ->post('/sales-pricings', [SalesPricingController::class, 'store']);
     });
 });
+
+
+use App\Http\Controllers\Api\Access\UserController;
+use App\Http\Controllers\Api\Access\RoleController;
+use App\Http\Controllers\Api\Access\PermissionController;
+
+Route::middleware('api.auth')
+    ->prefix('access')
+    ->group(function () {
+
+        /* ================= USERS ================= */
+        Route::middleware('permission:user.view')
+            ->get('/users', [UserController::class, 'index']);
+
+        Route::middleware('permission:user.create')
+            ->post('/users', [UserController::class, 'store']);
+
+        Route::middleware('permission:user.update')
+            ->put('/users/{user}', [UserController::class, 'update']);
+
+        Route::middleware('permission:user.delete')
+            ->delete('/users/{user}', [UserController::class, 'destroy']);
+
+        Route::middleware('permission:user.update')
+            ->put('/users/{user}/roles', [UserController::class, 'syncRoles']);
+
+
+        /* ================= ROLES ================= */
+        Route::middleware('permission:role.view')
+            ->get('/roles', [RoleController::class, 'index']);
+
+        Route::middleware('permission:role.create')
+            ->post('/roles', [RoleController::class, 'store']);
+
+        Route::middleware('permission:role.update')
+            ->put('/roles/{role}', [RoleController::class, 'update']);
+
+        Route::middleware('permission:role.delete')
+            ->delete('/roles/{role}', [RoleController::class, 'destroy']);
+
+        Route::middleware('permission:role.update')
+            ->put('/roles/{role}/permissions', [RoleController::class, 'syncPermissions']);
+
+
+        /* =============== PERMISSIONS =============== */
+        Route::middleware('permission:permission.view')
+            ->get('/permissions', [PermissionController::class, 'index']);
+
+        Route::middleware('permission:permission.create')
+            ->post('/permissions', [PermissionController::class, 'store']);
+
+        Route::middleware('permission:permission.update')
+            ->put('/permissions/{permission}', [PermissionController::class, 'update']);
+
+        Route::middleware('permission:permission.delete')
+            ->delete('/permissions/{permission}', [PermissionController::class, 'destroy']);
+    });
+
 
 /*
 |--------------------------------------------------------------------------
