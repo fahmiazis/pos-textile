@@ -11,21 +11,18 @@ class SupplierService
     {
         $query = Supplier::with('defaultStore');
 
-        // search (code, name)
         if (!empty($params['search'])) {
             $search = $params['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
-                  ->orWhere('name', 'like', "%{$search}%");
+                    ->orWhere('name', 'like', "%{$search}%");
             });
         }
 
-        // filter active
         if (isset($params['is_active'])) {
             $query->where('is_active', $params['is_active']);
         }
 
-        // filter store
         if (!empty($params['default_store_id'])) {
             $query->where('default_store_id', $params['default_store_id']);
         }
@@ -37,7 +34,12 @@ class SupplierService
 
     public function create(array $data)
     {
-        return Supplier::create($data);
+        return DB::transaction(function () use ($data) {
+            $data['code']      = $this->generateCode();
+            $data['is_active'] = $data['is_active'] ?? true;
+
+            return Supplier::create($data);
+        });
     }
 
     public function find(int $id)
@@ -49,6 +51,7 @@ class SupplierService
     {
         $supplier = Supplier::findOrFail($id);
         $supplier->update($data);
+
         return $supplier;
     }
 
@@ -88,5 +91,26 @@ class SupplierService
 
             return $supplier;
         });
+    }
+
+    /**
+     * Generate auto code: SUP-0001
+     */
+    protected function generateCode(): string
+    {
+        $prefix = 'SUP-';
+
+        $lastCode = Supplier::withTrashed()
+            ->where('code', 'like', $prefix . '%')
+            ->orderBy('code', 'desc')
+            ->value('code');
+
+        if (!$lastCode) {
+            return $prefix . '0001';
+        }
+
+        $number = (int) str_replace($prefix, '', $lastCode);
+
+        return $prefix . str_pad($number + 1, 4, '0', STR_PAD_LEFT);
     }
 }
