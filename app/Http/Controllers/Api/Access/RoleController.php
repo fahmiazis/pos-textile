@@ -12,19 +12,32 @@ class RoleController extends Controller
     {
         return Role::with('permissions:id,name')
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->map(fn($role) => [
+                'id'          => $role->id,
+                'name'        => $role->name,
+                'permissions' => $role->permissions->pluck('name'),
+            ]);
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name' => 'required|string|unique:roles,name'
+            'name' => 'required|string|unique:roles,name',
         ]);
 
-        return Role::create([
-            'name' => $data['name'],
-            'guard_name' => 'web'
+        $role = Role::create([
+            'name'       => $data['name'],
+            'guard_name' => 'web',
         ]);
+
+        return response()->json([
+            'message' => 'Role created',
+            'data'    => [
+                'id'   => $role->id,
+                'name' => $role->name,
+            ],
+        ], 201);
     }
 
     public function update(Request $request, Role $role)
@@ -36,27 +49,52 @@ class RoleController extends Controller
         }
 
         $data = $request->validate([
-            'name' => 'required|string|unique:roles,name,' . $role->id
+            'name' => 'required|string|unique:roles,name,' . $role->id,
         ]);
 
         $role->update($data);
 
-        return response()->json($role);
+        return response()->json([
+            'message' => 'Role updated',
+            'data'    => [
+                'id'   => $role->id,
+                'name' => $role->name,
+            ],
+        ]);
     }
 
     public function destroy(Role $role)
     {
-        if ($role->name === 'superadmin') {
+        $usersCount = $role->users()->count();
+
+        if ($usersCount > 0) {
             return response()->json([
-                'message' => 'Superadmin role cannot be deleted'
-            ], 403);
+                'success' => false,
+                'message' => 'Role cannot be deleted',
+                'reason'  => 'Role is still assigned to users',
+                'details' => [
+                    'role'        => $role->name,
+                    'users_count' => $usersCount,
+                ],
+                'hint' => 'Remove this role from all users before deleting it',
+            ], 422);
         }
 
+        $roleName = $role->name;
         $role->delete();
 
-        return response()->json(['message' => 'Role deleted']);
+        return response()->json([
+            'success' => true,
+            'message' => 'Role deleted successfully',
+            'data' => [
+                'role' => $roleName,
+            ]
+        ]);
     }
 
+    /**
+     * Replace permissions of role (as-is → to-be)
+     */
     public function syncPermissions(Request $request, Role $role)
     {
         if ($role->name === 'superadmin') {
@@ -66,14 +104,20 @@ class RoleController extends Controller
         }
 
         $data = $request->validate([
-            'permissions' => 'required|array'
+            'permissions' => 'required|array',
         ]);
+
+        $before = $role->getPermissionNames()->values();
 
         $role->syncPermissions($data['permissions']);
 
         return response()->json([
             'message' => 'Permissions updated',
-            'permissions' => $role->getPermissionNames()
+            'data' => [
+                'role' => $role->name,
+                'before' => $before,
+                'after'  => $role->getPermissionNames(),
+            ]
         ]);
     }
 }

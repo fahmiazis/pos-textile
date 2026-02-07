@@ -180,4 +180,26 @@ class UserController extends Controller
             'message' => 'User deleted'
         ]);
     }
+    /**
+     * Get user effective permissions
+     * (direct + via roles)
+     */
+    public function permissions(User $user)
+    {
+        return response()->json([
+            'data' => [
+                'user' => [
+                    'id'    => $user->id,
+                    'name'  => $user->name,
+                    'email' => $user->email,
+                    'roles' => $user->getRoleNames(),
+                ],
+                'permissions' => [
+                    'direct'     => $user->getDirectPermissions()->pluck('name'),
+                    'via_roles'  => $user->getPermissionsViaRoles()->pluck('name'),
+                    'effective'  => $user->getAllPermissions()->pluck('name'),
+                ],
+            ]
+        ]);
+    }
 }

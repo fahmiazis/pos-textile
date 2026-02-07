@@ -189,6 +189,11 @@ Route::middleware('api.auth')
 
 
         /* =============== PERMISSIONS =============== */
+
+        Route::middleware('permission:user.view')
+            ->get('/users/{user}/permissions', [UserController::class, 'permissions']);
+
+
         Route::middleware('permission:permission.view')
             ->get('/permissions', [PermissionController::class, 'index']);
 
