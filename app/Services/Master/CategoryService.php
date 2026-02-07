@@ -11,16 +11,14 @@ class CategoryService
     {
         $query = Category::query();
 
-        // search (code / name)
         if (!empty($params['search'])) {
             $search = $params['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
-                  ->orWhere('name', 'like', "%{$search}%");
+                    ->orWhere('name', 'like', "%{$search}%");
             });
         }
 
-        // filter active
         if (isset($params['is_active'])) {
             $query->where('is_active', $params['is_active']);
         }
@@ -32,7 +30,12 @@ class CategoryService
 
     public function create(array $data)
     {
-        return Category::create($data);
+        return DB::transaction(function () use ($data) {
+            $data['code']      = $this->generateCode();
+            $data['is_active'] = $data['is_active'] ?? true;
+
+            return Category::create($data);
+        });
     }
 
     public function find(int $id)
@@ -44,6 +47,7 @@ class CategoryService
     {
         $category = $this->find($id);
         $category->update($data);
+
         return $category;
     }
 
@@ -81,5 +85,26 @@ class CategoryService
 
             return $category;
         });
+    }
+
+    /**
+     * Generate auto code: CAT-0001
+     */
+    protected function generateCode(): string
+    {
+        $prefix = 'CAT-';
+
+        $lastCode = Category::withTrashed()
+            ->where('code', 'like', $prefix . '%')
+            ->orderBy('code', 'desc')
+            ->value('code');
+
+        if (!$lastCode) {
+            return $prefix . '0001';
+        }
+
+        $number = (int) str_replace($prefix, '', $lastCode);
+
+        return $prefix . str_pad($number + 1, 4, '0', STR_PAD_LEFT);
     }
 }
