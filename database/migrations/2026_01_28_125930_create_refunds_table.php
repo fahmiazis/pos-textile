@@ -30,7 +30,6 @@ return new class extends Migration {
 
             $table->timestamps();
 
-            // FULL refund only (1 billing = 1 refund)
             $table->unique('billing_id');
         });
     }

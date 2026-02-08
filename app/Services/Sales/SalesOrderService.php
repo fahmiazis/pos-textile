@@ -130,6 +130,10 @@ class SalesOrderService
                 ->lockForUpdate()
                 ->findOrFail($salesOrderId);
 
+            if ($order->status === 'cancelled') {
+                throw new Exception('Sales order sudah dibatalkan');
+            }
+
             if (!in_array($order->status, ['draft', 'submitted'])) {
                 throw new Exception('Sales order tidak bisa dibatalkan');
             }

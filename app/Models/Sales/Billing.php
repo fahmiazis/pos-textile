@@ -17,6 +17,7 @@ class Billing extends Model
     'billing_date',
     'total_amount',
     'paid_amount',
+    'reminder_amount',
     'status',
   ];
 

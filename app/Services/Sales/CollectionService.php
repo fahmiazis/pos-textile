@@ -32,6 +32,11 @@ class CollectionService
         throw new Exception('Billing sudah lunas');
       }
 
+      $remainingAmount = (float) $billing->reminder_amount;
+      if ($amount > $remainingAmount) {
+        throw new Exception('Nominal pembayaran melebihi sisa tagihan');
+      }
+
       $collection = Collection::create([
         'collection_number' => DocumentNumberService::generate(
           'collections',
@@ -48,15 +53,17 @@ class CollectionService
 
 
       $billing->paid_amount += $amount;
+      $billing->reminder_amount -= $amount;
 
-      if ($billing->paid_amount >= $billing->total_amount) {
+      if ($billing->reminder_amount <= 0) {
         $billing->paid_amount = $billing->total_amount;
+        $billing->reminder_amount = 0;
         $billing->status = 'paid';
-        $billing->save();
       } else {
         $billing->status = 'partial';
-        $billing->save();
       }
+
+      $billing->save();
 
       // dispatch event SETELAH billing 
       if ($billing->status === 'paid') {

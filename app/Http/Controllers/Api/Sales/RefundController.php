@@ -23,9 +23,14 @@ class RefundController extends Controller
             $request->reason
         );
 
+        $message = 'Full refund berhasil diproses';
+        if ($refund->reason) {
+            $message .= '. Alasan: ' . $refund->reason;
+        }
+
         return response()->json([
             'success' => true,
-            'message' => 'Full refund berhasil diproses',
+            'message' => $message,
             'data'    => $refund,
         ]);
     }
