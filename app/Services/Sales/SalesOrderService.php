@@ -96,6 +96,17 @@ class SalesOrderService
                 ->lockForUpdate()
                 ->findOrFail($salesOrderId);
 
+            if ($order->status === 'cancelled') {
+                $cancelledAt = $order->cancelled_at
+                    ? $order->cancelled_at->toDateTimeString()
+                    : null;
+                $message = 'Sales order sudah dibatalkan';
+                if ($cancelledAt) {
+                    $message .= ' pada ' . $cancelledAt;
+                }
+                throw new Exception($message);
+            }
+
             if ($order->status !== 'draft') {
                 throw new Exception('Sales order tidak bisa disubmit');
             }
