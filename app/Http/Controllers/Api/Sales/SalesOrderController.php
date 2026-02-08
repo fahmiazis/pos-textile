@@ -82,6 +82,20 @@ class SalesOrderController extends Controller
         'items.product',
         'store',
         'customer'
+      ])->only([
+        'id',
+        'so_number',
+        'status',
+        'order_date',
+        'total_qty',
+        'total_amount',
+        'created_by',
+        'notes',
+        'created_at',
+        'updated_at',
+        'items',
+        'store',
+        'customer',
       ])
     ], 201);
   }
@@ -124,7 +138,7 @@ class SalesOrderController extends Controller
 
       return response()->json([
         'success' => true,
-        'message' => 'Sales order berhasil disubmit',
+        'message' => 'Sales order berhasil disubmit. Total sudah termasuk PPN 11%.',
         'data' => $order->load([
           'items.product',
           'customer',

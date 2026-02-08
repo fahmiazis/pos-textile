@@ -25,10 +25,13 @@ class BillingController extends Controller
 
     return response()->json([
       'success' => true,
-      'message' => 'Billing berhasil dibuat',
+      'message' => 'Billing berhasil dibuat (total sudah termasuk PPN 11%)',
       'data' => [
         'billing_id' => $billing->id,
         'invoice_number' => $billing->invoice_number,
+        'subtotal_amount' => $billing->subtotal_amount,
+        'tax_rate' => $billing->tax_rate,
+        'tax_amount' => $billing->tax_amount,
         'total_amount' => $billing->total_amount,
         'status' => $billing->status,
       ]

@@ -44,6 +44,10 @@ class CollectionController extends Controller
           : 'Pembayaran tercatat (parsial). Sisa pembayaran: ' . $reminderAmount,
         'data' => [
           'billing_id'      => $billing->id,
+          'subtotal_amount' => $billing->subtotal_amount,
+          'tax_rate'        => $billing->tax_rate,
+          'tax_amount'      => $billing->tax_amount,
+          'total_amount'    => $billing->total_amount,
           'paid_amount'     => $billing->paid_amount,
           'reminder_amount' => $reminderAmount,
           'billing_status'  => $billing->status,
