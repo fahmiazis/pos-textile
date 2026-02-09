@@ -15,7 +15,10 @@ class PurchaseOrder extends Model
         'created_by',
         'notes',
         'total_qty',
-        'total_amount'
+        'total_amount',
+        'submitted_at',
+        'received_at',
+        'cancelled_at',
     ];
 
 
