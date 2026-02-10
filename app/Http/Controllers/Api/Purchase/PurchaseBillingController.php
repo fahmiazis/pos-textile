@@ -35,6 +35,28 @@ class PurchaseBillingController extends Controller
     }
 
     /**
+     * GET /purchase/billings/{id}
+     */
+    public function show(int $id)
+    {
+        $billing = PurchaseBilling::with(['supplier', 'store', 'purchaseOrder'])
+            ->find($id);
+
+        if (! $billing) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $billing
+        ]);
+    }
+
+
+    /**
      * POST /purchase/billings/from-po/{id}
      */
     public function createFromPo(int $id)

@@ -32,9 +32,13 @@ class BillingService
         ),
         'sales_order_id' => $salesOrder->id,
         'billing_date'   => now()->toDateString(),
-        'total_amount'  => $salesOrder->total_amount,
-        'paid_amount'   => 0,
-        'status'        => 'unpaid',
+        'subtotal_amount' => $salesOrder->subtotal_amount,
+        'tax_rate'        => $salesOrder->tax_rate,
+        'tax_amount'      => $salesOrder->tax_amount,
+        'total_amount'    => $salesOrder->total_amount,
+        'paid_amount'     => 0,
+        'reminder_amount' => $salesOrder->total_amount,
+        'status'          => 'unpaid',
       ]);
     });
   }

@@ -82,6 +82,20 @@ class SalesOrderController extends Controller
         'items.product',
         'store',
         'customer'
+      ])->only([
+        'id',
+        'so_number',
+        'status',
+        'order_date',
+        'total_qty',
+        'total_amount',
+        'created_by',
+        'notes',
+        'created_at',
+        'updated_at',
+        'items',
+        'store',
+        'customer',
       ])
     ], 201);
   }
@@ -124,7 +138,7 @@ class SalesOrderController extends Controller
 
       return response()->json([
         'success' => true,
-        'message' => 'Sales order berhasil disubmit',
+        'message' => 'Sales order berhasil disubmit. Total sudah termasuk PPN 11%.',
         'data' => $order->load([
           'items.product',
           'customer',
@@ -132,6 +146,33 @@ class SalesOrderController extends Controller
         ])
       ]);
     } catch (\Exception $e) {
+      $order = SalesOrder::with(['customer', 'store'])
+        ->find($id);
+
+      if ($order && $order->status === 'cancelled') {
+        return response()->json([
+          'success' => false,
+          'message' => 'Sales Order Cancelled tidak bisa disubmit',
+          'data' => [
+            'id' => $order->id,
+            'so_number' => $order->so_number,
+            'status' => $order->status,
+            'order_date' => $order->order_date,
+            'submitted_at' => $order->submitted_at,
+            'cancelled_at' => $order->cancelled_at,
+            'total_amount' => $order->total_amount,
+            'customer' => $order->customer ? [
+              'id' => $order->customer->id,
+              'name' => $order->customer->name,
+            ] : null,
+            'store' => $order->store ? [
+              'id' => $order->store->id,
+              'name' => $order->store->name,
+            ] : null,
+          ],
+        ], 400);
+      }
+
       return response()->json([
         'success' => false,
         'message' => $e->getMessage()

@@ -38,7 +38,7 @@ Route::middleware('api.auth')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 
     Route::get('/me', function () {
-        $user = auth()->user();
+        $user = request()->user();
 
         return response()->json([
             'id' => $user->id,
@@ -140,6 +140,77 @@ Route::middleware('api.auth')->group(function () {
     });
 });
 
+
+use App\Http\Controllers\Api\Access\UserController;
+use App\Http\Controllers\Api\Access\RoleController;
+use App\Http\Controllers\Api\Access\PermissionController;
+
+Route::middleware('api.auth')
+    ->prefix('access')
+    ->group(function () {
+
+        /* ================= USERS ================= */
+        Route::middleware('permission:user.view')
+            ->get('/users', [UserController::class, 'index']);
+
+        Route::middleware('permission:user.create')
+            ->post('/users', [UserController::class, 'store']);
+
+        Route::middleware('permission:user.update')
+            ->put('/users/{user}', [UserController::class, 'update']);
+
+        Route::middleware('permission:user.delete')
+            ->delete('/users/{user}', [UserController::class, 'destroy']);
+
+        Route::middleware('permission:user.update')
+            ->put('/users/{user}/roles', [UserController::class, 'syncRoles']);
+
+        Route::middleware('permission:user.update')
+            ->patch('/users/{user}/active', [UserController::class, 'toggleActive']);
+
+        Route::middleware('permission:user.update')
+            ->patch('/users/{user}/reset-password', [UserController::class, 'resetPassword']);
+
+        Route::middleware('permission:user.update')
+            ->put('/users/{user}/permissions', [UserController::class, 'syncDirectPermissions']);
+
+        /* ================= ROLES ================= */
+        Route::middleware('permission:role.view')
+            ->get('/roles', [RoleController::class, 'index']);
+
+        Route::middleware('permission:role.create')
+            ->post('/roles', [RoleController::class, 'store']);
+
+        Route::middleware('permission:role.update')
+            ->put('/roles/{role}', [RoleController::class, 'update']);
+
+        Route::middleware('permission:role.delete')
+            ->delete('/roles/{role}', [RoleController::class, 'destroy']);
+
+        Route::middleware('permission:role.update')
+            ->put('/roles/{role}/permissions', [RoleController::class, 'syncPermissions']);
+
+
+        /* =============== PERMISSIONS =============== */
+
+        Route::middleware('permission:user.view')
+            ->get('/users/{user}/permissions', [UserController::class, 'permissions']);
+
+
+        Route::middleware('permission:permission.view')
+            ->get('/permissions', [PermissionController::class, 'index']);
+
+        Route::middleware('permission:permission.create')
+            ->post('/permissions', [PermissionController::class, 'store']);
+
+        Route::middleware('permission:permission.update')
+            ->put('/permissions/{permission}', [PermissionController::class, 'update']);
+
+        Route::middleware('permission:permission.delete')
+            ->delete('/permissions/{permission}', [PermissionController::class, 'destroy']);
+    });
+
+
 /*
 |--------------------------------------------------------------------------
 | Inventory 
@@ -239,7 +310,8 @@ Route::middleware('api.auth')->group(function () {
             ->post('/orders/{id}/submit', [PurchaseOrderController::class, 'submit']);
         Route::middleware('permission:purchase_order.cancel')
             ->post('/orders/{id}/cancel', [PurchaseOrderController::class, 'cancel']);
-        Route::post('/orders/{id}/receive', [PurchaseOrderController::class, 'receive']);
+        Route::middleware('permission:purchase_order.receive')
+            ->post('/orders/{id}/receive', [PurchaseOrderController::class, 'receive']);
     });
 });
 
@@ -250,11 +322,19 @@ Route::middleware('api.auth')->group(function () {
 
 use App\Http\Controllers\Api\Purchase\PurchaseBillingController;
 
-Route::middleware('api.auth')->prefix('purchase')->group(function () {
+Route::middleware('api.auth')
+    ->prefix('purchase')
+    ->group(function () {
 
-    Route::get('/billings', [PurchaseBillingController::class, 'index']);
-    Route::post('/billings/from-po/{id}', [PurchaseBillingController::class, 'createFromPo']);
-});
+        Route::middleware('permission:purchase_billing.view')
+            ->get('/billings', [PurchaseBillingController::class, 'index']);
+
+        Route::middleware('permission:purchase_billing.view')
+            ->get('/billings/{id}', [PurchaseBillingController::class, 'show']);
+
+        Route::middleware('permission:purchase_billing.create')
+            ->post('/billings/from-po/{id}', [PurchaseBillingController::class, 'createFromPo']);
+    });
 
 /*|--------------------------------------------------------------------------
 | Purchase Payments
@@ -266,18 +346,12 @@ Route::middleware('api.auth')
     ->prefix('purchase')
     ->group(function () {
 
-        Route::get(
-            '/payments',
-            [PurchasePaymentController::class, 'index']
-        );
+        Route::middleware('permission:purchase_payment.view')
+            ->get('/payments', [PurchasePaymentController::class, 'index']);
 
-        Route::post(
-            '/payments',
-            [PurchasePaymentController::class, 'store']
-        );
+        Route::middleware('permission:purchase_payment.create')
+            ->post('/payments', [PurchasePaymentController::class, 'store']);
 
-        Route::get(
-            '/payments/{id}',
-            [PurchasePaymentController::class, 'show']
-        );
+        Route::middleware('permission:purchase_payment.view')
+            ->get('/payments/{id}', [PurchasePaymentController::class, 'show']);
     });

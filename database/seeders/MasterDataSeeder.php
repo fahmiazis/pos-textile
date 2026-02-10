@@ -108,11 +108,6 @@ class MasterDataSeeder extends Seeder
                 ],
             ]);
 
-
-
-            /**
-             * PRODUCTS (KAIN)
-             */
             /**
              * PRODUCTS (KAIN)
              */

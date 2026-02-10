@@ -15,6 +15,14 @@ class RefundService
   {
     return DB::transaction(function () use ($salesOrder, $reason) {
 
+      $existingRefund = Refund::where('sales_order_id', $salesOrder->id)
+        ->latest()
+        ->first();
+
+      if ($existingRefund) {
+        throw new Exception('Sales order sudah direfund');
+      }
+
       $billing = $salesOrder->billings()
         ->where('status', 'paid')
         ->lockForUpdate()

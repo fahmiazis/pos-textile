@@ -15,9 +15,22 @@ class Billing extends Model
     'invoice_number',
     'sales_order_id',
     'billing_date',
+    'subtotal_amount',
+    'tax_rate',
+    'tax_amount',
     'total_amount',
     'paid_amount',
+    'reminder_amount',
     'status',
+  ];
+
+  protected $casts = [
+    'subtotal_amount' => 'float',
+    'tax_rate' => 'float',
+    'tax_amount' => 'float',
+    'total_amount' => 'float',
+    'paid_amount' => 'float',
+    'reminder_amount' => 'float',
   ];
 
   public function salesOrder()

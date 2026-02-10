@@ -14,6 +14,8 @@ use Exception;
 
 class SalesOrderService
 {
+    private const TAX_RATE = 0.11;
+
     protected InventoryService $inventoryService;
     protected SalesPricingService $pricingService;
 
@@ -96,9 +98,25 @@ class SalesOrderService
                 ->lockForUpdate()
                 ->findOrFail($salesOrderId);
 
+            if ($order->status === 'cancelled') {
+                $cancelledAt = $order->cancelled_at
+                    ? $order->cancelled_at->toDateTimeString()
+                    : null;
+                $message = 'Sales order sudah dibatalkan';
+                if ($cancelledAt) {
+                    $message .= ' pada ' . $cancelledAt;
+                }
+                throw new Exception($message);
+            }
+
             if ($order->status !== 'draft') {
                 throw new Exception('Sales order tidak bisa disubmit');
             }
+
+            $subtotalAmount = (float) $order->subtotal_amount;
+            $taxRate = self::TAX_RATE;
+            $taxAmount = round($subtotalAmount * $taxRate, 2);
+            $totalAmount = $subtotalAmount + $taxAmount;
 
             foreach ($order->items as $item) {
                 $this->inventoryService->reserveStock(
@@ -113,6 +131,9 @@ class SalesOrderService
             $order->update([
                 'status'       => 'submitted',
                 'submitted_at' => now(),
+                'tax_rate'     => $taxRate,
+                'tax_amount'   => $taxAmount,
+                'total_amount' => $totalAmount,
             ]);
 
             return $order;
@@ -129,6 +150,10 @@ class SalesOrderService
             $order = SalesOrder::with('items')
                 ->lockForUpdate()
                 ->findOrFail($salesOrderId);
+
+            if ($order->status === 'cancelled') {
+                throw new Exception('Sales order sudah dibatalkan');
+            }
 
             if (!in_array($order->status, ['draft', 'submitted'])) {
                 throw new Exception('Sales order tidak bisa dibatalkan');
@@ -164,7 +189,7 @@ class SalesOrderService
     private function syncItems(SalesOrder $order, array $items): void
     {
         $totalQty = 0;
-        $totalAmount = 0;
+        $subtotalAmount = 0;
 
         // pastikan customer ke-load
         $order->loadMissing('customer');
@@ -206,12 +231,15 @@ class SalesOrderService
             ]);
 
             $totalQty += $qtyBase;
-            $totalAmount += $subtotal;
+            $subtotalAmount += $subtotal;
         }
 
         $order->update([
             'total_qty'    => $totalQty,
-            'total_amount' => $totalAmount,
+            'subtotal_amount' => $subtotalAmount,
+            'tax_rate'     => self::TAX_RATE,
+            'tax_amount'   => 0,
+            'total_amount' => $subtotalAmount,
         ]);
     }
 }

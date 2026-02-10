@@ -10,6 +10,7 @@ class Refund extends Model
     'refund_number',
     'sales_order_id',
     'billing_id',
+    'refund_number',
     'amount',
     'status',
     'reason',
