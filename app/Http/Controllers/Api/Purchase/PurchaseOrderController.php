@@ -32,7 +32,7 @@ class PurchaseOrderController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $query->latest()->get()
+            'data' => $query->latest()->get(),
         ]);
     }
 
@@ -46,36 +46,33 @@ class PurchaseOrderController extends Controller
         $po = PurchaseOrder::with([
             'store',
             'supplier',
-            'items.product'
+            'items.product',
         ])->findOrFail($id);
 
         return response()->json([
             'success' => true,
-            'data' => $po
+            'data' => $po,
         ]);
     }
 
     /*
     =========================
-    CREATE PO
+    CREATE PO (DRAFT)
     =========================
     */
     public function store(Request $request)
     {
         try {
-
             $data = $request->validate([
-                'store_id' => 'required|exists:stores,id',
+                'store_id'    => 'required|exists:stores,id',
                 'supplier_id' => 'required|exists:suppliers,id',
-                'order_date' => 'required|date',
-                'notes' => 'nullable|string',
+                'order_date'  => 'required|date',
+                'notes'       => 'nullable|string',
 
-                'items' => 'required|array|min:1',
-                'items.*.product_id' => 'required|exists:products,id',
-                'items.*.uom_id' => 'required|exists:units,id',
-                'items.*.qty_input' => 'required|numeric|min:0.01',
-                'items.*.price' => 'required|numeric|min:0',
-                'items.*.discount' => 'nullable|numeric|min:0',
+                'items'                 => 'required|array|min:1',
+                'items.*.product_id'    => 'required|exists:products,id',
+                'items.*.uom_id'        => 'required|exists:units,id',
+                'items.*.qty_input'     => 'required|numeric|min:0.01',
             ]);
 
             $po = $this->service->create($data, auth()->id());
@@ -83,13 +80,13 @@ class PurchaseOrderController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Purchase Order draft created',
-                'data' => $po->load(['items.product', 'supplier', 'store'])
+                'data'    => $po->load(['items.product', 'supplier', 'store']),
             ], 201);
-        } catch (Exception $e) {
 
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 422);
         }
     }
@@ -102,18 +99,15 @@ class PurchaseOrderController extends Controller
     public function update(Request $request, int $id)
     {
         try {
-
             $data = $request->validate([
                 'supplier_id' => 'required|exists:suppliers,id',
-                'order_date' => 'required|date',
-                'notes' => 'nullable|string',
+                'order_date'  => 'required|date',
+                'notes'       => 'nullable|string',
 
-                'items' => 'required|array|min:1',
-                'items.*.product_id' => 'required|exists:products,id',
-                'items.*.uom_id' => 'required|exists:units,id',
-                'items.*.qty_input' => 'required|numeric|min:0.01',
-                'items.*.price' => 'required|numeric|min:0',
-                'items.*.discount' => 'nullable|numeric|min:0',
+                'items'                 => 'required|array|min:1',
+                'items.*.product_id'    => 'required|exists:products,id',
+                'items.*.uom_id'        => 'required|exists:units,id',
+                'items.*.qty_input'     => 'required|numeric|min:0.01',
             ]);
 
             $po = $this->service->updateDraft($id, $data);
@@ -121,13 +115,13 @@ class PurchaseOrderController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'PO draft updated',
-                'data' => $po->load(['items.product', 'supplier', 'store'])
+                'data'    => $po->load(['items.product', 'supplier', 'store']),
             ]);
-        } catch (Exception $e) {
 
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 422);
         }
     }
@@ -140,19 +134,17 @@ class PurchaseOrderController extends Controller
     public function submit(int $id)
     {
         try {
-
             $po = $this->service->submit($id);
 
             return response()->json([
                 'success' => true,
                 'message' => 'PO submitted',
-                'data' => $po->load(['supplier', 'store', 'items.product'])
+                'data'    => $po->load(['supplier', 'store', 'items.product']),
             ]);
         } catch (Exception $e) {
-
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 422);
         }
     }
@@ -165,26 +157,22 @@ class PurchaseOrderController extends Controller
     public function cancel(int $id)
     {
         try {
-
             $po = $this->service->cancel($id);
 
             return response()->json([
                 'success' => true,
                 'message' => 'PO cancelled',
-                'data' => $po->load(['supplier', 'store', 'items.product'])
+                'data'    => $po->load(['supplier', 'store', 'items.product']),
             ]);
         } catch (Exception $e) {
-
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 422);
         }
     }
 
-
-
-     /*
+    /*
     =========================
     RECEIVE PO (GR)
     =========================
@@ -192,19 +180,17 @@ class PurchaseOrderController extends Controller
     public function receive(int $id)
     {
         try {
-
             $po = $this->service->receive($id);
 
             return response()->json([
                 'success' => true,
                 'message' => 'PO received & stock updated',
-                'data' => $po->load(['supplier', 'store', 'items.product'])
+                'data'    => $po->load(['supplier', 'store', 'items.product']),
             ]);
         } catch (Exception $e) {
-
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], 422);
         }
     }
