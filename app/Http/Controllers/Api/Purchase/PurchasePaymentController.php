@@ -39,7 +39,7 @@ class PurchasePaymentController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $query->latest()->get()
+            'data'    => $query->latest()->get()
         ]);
     }
 
@@ -51,25 +51,21 @@ class PurchasePaymentController extends Controller
     public function store(Request $request)
     {
         try {
-
             $data = $request->validate([
                 'purchase_billing_id' => 'required|exists:purchase_billings,id',
                 'payment_date'        => 'required|date',
                 'amount'              => 'required|numeric|min:0.01',
-                'payment_method'      => 'nullable|string|max:50',
+                'payment_method'      => 'required|string|max:50',
                 'reference_number'    => 'nullable|string|max:100',
                 'notes'               => 'nullable|string',
             ]);
 
-            $payment = $this->service->pay(
-                $data,
-                auth()->id()
-            );
+            $payment = $this->service->pay($data, auth()->id());
 
             return response()->json([
                 'success' => true,
                 'message' => 'AP Payment berhasil dicatat',
-                'data' => $payment->load([
+                'data'    => $payment->load([
                     'billing',
                     'supplier',
                     'store'
@@ -77,7 +73,6 @@ class PurchasePaymentController extends Controller
             ], 201);
 
         } catch (Exception $e) {
-
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage()
@@ -100,7 +95,7 @@ class PurchasePaymentController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $payment
+            'data'    => $payment
         ]);
     }
 }

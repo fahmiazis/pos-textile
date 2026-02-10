@@ -22,7 +22,6 @@ class PurchasePaymentService
 
         return DB::transaction(function () use ($data, $userId) {
 
-            // lock billing
             $billing = PurchaseBilling::lockForUpdate()
                 ->findOrFail($data['purchase_billing_id']);
 
@@ -34,28 +33,33 @@ class PurchasePaymentService
                 throw new Exception('Nominal pembayaran melebihi sisa hutang');
             }
 
-            // create payment
+            //  BUSINESS RULE: CASH vs NON-CASH
+            $method = strtolower($data['payment_method']);
+
+            if ($method !== 'cash' && empty($data['reference_number'])) {
+                throw new Exception(
+                    'Reference number wajib diisi untuk metode pembayaran non-cash'
+                );
+            }
+
             $payment = PurchasePayment::create([
                 'purchase_billing_id' => $billing->id,
                 'supplier_id'         => $billing->supplier_id,
                 'store_id'            => $billing->store_id,
                 'payment_date'        => $data['payment_date'],
                 'amount'              => $data['amount'],
-                'payment_method'      => $data['payment_method'] ?? null,
+                'payment_method'      => $method,
                 'reference_number'    => $data['reference_number'] ?? null,
                 'notes'               => $data['notes'] ?? null,
                 'created_by'          => $userId,
             ]);
 
-            // update billing amount
             $billing->paid_amount += $data['amount'];
             $billing->remaining_amount -= $data['amount'];
 
-            if ($billing->remaining_amount == 0) {
-                $billing->status = 'paid';
-            } else {
-                $billing->status = 'partial';
-            }
+            $billing->status = $billing->remaining_amount == 0
+                ? 'paid'
+                : 'partial';
 
             $billing->save();
 
