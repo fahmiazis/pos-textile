@@ -355,3 +355,38 @@ Route::middleware('api.auth')
         Route::middleware('permission:purchase_payment.view')
             ->get('/payments/{id}', [PurchasePaymentController::class, 'show']);
     });
+
+
+/*|--------------------------------------------------------------------------
+| Purchase Pricings
+|--------------------------------------------------------------------------*/
+
+use App\Http\Controllers\Api\Master\PurchasePricingController;
+
+Route::middleware('api.auth')
+    ->prefix('master')
+    ->group(function () {
+
+        // LIST + SEARCH
+        // ?product_id=
+        // ?supplier_id=
+        // ?is_active=
+        Route::middleware('permission:purchase_pricing.view')
+            ->get('/purchase-pricings', [PurchasePricingController::class, 'index']);
+
+        // SHOW BY ID
+        Route::middleware('permission:purchase_pricing.view')
+            ->get('/purchase-pricings/{id}', [PurchasePricingController::class, 'show']);
+
+        // CREATE
+        Route::middleware('permission:purchase_pricing.create')
+            ->post('/purchase-pricings', [PurchasePricingController::class, 'store']);
+
+        // UPDATE
+        Route::middleware('permission:purchase_pricing.update')
+            ->put('/purchase-pricings/{id}', [PurchasePricingController::class, 'update']);
+
+        // DELETE
+        Route::middleware('permission:purchase_pricing.delete')
+            ->delete('/purchase-pricings/{id}', [PurchasePricingController::class, 'destroy']);
+    });

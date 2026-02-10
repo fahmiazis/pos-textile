@@ -6,24 +6,29 @@ use App\Models\Purchase\PurchaseOrder;
 use App\Models\Purchase\PurchaseOrderItem;
 use App\Models\Master\Unit;
 use App\Services\Common\DocumentNumberService;
-use Illuminate\Support\Facades\DB;
 use App\Services\Inventory\InventoryService;
+use App\Services\Master\PurchasePricingService;
+use Illuminate\Support\Facades\DB;
 use Exception;
 
 class PurchaseOrderService
 {
     protected InventoryService $inventoryService;
+    protected PurchasePricingService $pricingService;
 
-    public function __construct(InventoryService $inventoryService)
-    {
+    public function __construct(
+        InventoryService $inventoryService,
+        PurchasePricingService $pricingService
+    ) {
         $this->inventoryService = $inventoryService;
+        $this->pricingService   = $pricingService;
     }
 
-    /**
-     * =========================
-     * HELPER : FINAL LOCK CHECK
-     * =========================
-     */
+    /*
+    =========================
+    FINAL LOCK CHECK
+    =========================
+    */
     private function isLocked(PurchaseOrder $po): bool
     {
         return $po->submitted_at !== null
@@ -31,11 +36,11 @@ class PurchaseOrderService
             || $po->cancelled_at !== null;
     }
 
-    /**
-     * =========================
-     * CREATE PO (DRAFT)
-     * =========================
-     */
+    /*
+    =========================
+    CREATE PO (DRAFT)
+    =========================
+    */
     public function create(array $data, ?int $userId): PurchaseOrder
     {
         if (! $userId) {
@@ -45,11 +50,7 @@ class PurchaseOrderService
         return DB::transaction(function () use ($data, $userId) {
 
             $po = PurchaseOrder::create([
-                'po_number' => DocumentNumberService::generate(
-                    'purchase_orders',
-                    'po_number',
-                    'PO'
-                ),
+                'po_number'   => DocumentNumberService::generate('purchase_orders', 'po_number', 'PO'),
                 'store_id'    => $data['store_id'],
                 'supplier_id' => $data['supplier_id'],
                 'order_date'  => $data['order_date'],
@@ -64,11 +65,11 @@ class PurchaseOrderService
         });
     }
 
-    /**
-     * =========================
-     * UPDATE DRAFT PO
-     * =========================
-     */
+    /*
+    =========================
+    UPDATE DRAFT
+    =========================
+    */
     public function updateDraft(int $id, array $data): PurchaseOrder
     {
         return DB::transaction(function () use ($id, $data) {
@@ -77,13 +78,12 @@ class PurchaseOrderService
                 ->lockForUpdate()
                 ->findOrFail($id);
 
-            // 🔒 FINAL LOCK
             if ($this->isLocked($po)) {
-                throw new Exception('PO sudah final, tidak bisa diedit');
+                throw new Exception('Gagal, tidak bisa diedit PO sudah diproses atau dibatalkan');
             }
 
             if ($po->status !== 'draft') {
-                throw new Exception('PO bukan draft, tidak bisa diedit');
+                throw new Exception('PO bukan draft');
             }
 
             $po->update([
@@ -99,11 +99,11 @@ class PurchaseOrderService
         });
     }
 
-    /**
-     * =========================
-     * SUBMIT PO (ONCE)
-     * =========================
-     */
+    /*
+    =========================
+    SUBMIT PO
+    =========================
+    */
     public function submit(int $id): PurchaseOrder
     {
         return DB::transaction(function () use ($id) {
@@ -111,11 +111,11 @@ class PurchaseOrderService
             $po = PurchaseOrder::lockForUpdate()->findOrFail($id);
 
             if ($this->isLocked($po)) {
-                throw new Exception('PO sudah final, tidak bisa disubmit');
+                throw new Exception('Gagal submit PO, PO sudah diproses atau dibatalkan');
             }
 
             if ($po->status !== 'draft') {
-                throw new Exception('PO hanya bisa disubmit dari status draft');
+                throw new Exception('PO hanya bisa disubmit dari draft');
             }
 
             $po->update([
@@ -127,11 +127,11 @@ class PurchaseOrderService
         });
     }
 
-    /**
-     * =========================
-     * CANCEL PO
-     * =========================
-     */
+    /*
+    =========================
+    CANCEL PO
+    =========================
+    */
     public function cancel(int $id): PurchaseOrder
     {
         return DB::transaction(function () use ($id) {
@@ -139,7 +139,7 @@ class PurchaseOrderService
             $po = PurchaseOrder::lockForUpdate()->findOrFail($id);
 
             if ($this->isLocked($po)) {
-                throw new Exception('PO sudah final, tidak bisa dibatalkan');
+                throw new Exception('Gagal membatalkan, PO sudah diproses atau dibatalkan');
             }
 
             if (! in_array($po->status, ['draft', 'submitted'])) {
@@ -147,19 +147,19 @@ class PurchaseOrderService
             }
 
             $po->update([
-                'status'        => 'cancelled',
-                'cancelled_at'  => now(),
+                'status'       => 'cancelled',
+                'cancelled_at' => now(),
             ]);
 
             return $po;
         });
     }
 
-    /**
-     * =========================
-     * RECEIVE PO (GR)
-     * =========================
-     */
+    /*
+    =========================
+    RECEIVE PO
+    =========================
+    */
     public function receive(int $id): PurchaseOrder
     {
         return DB::transaction(function () use ($id) {
@@ -169,18 +169,13 @@ class PurchaseOrderService
                 ->findOrFail($id);
 
             if ($po->received_at !== null) {
-                throw new Exception('PO sudah pernah diterima');
-            }
-
-            if ($po->submitted_at === null) {
-                throw new Exception('PO belum pernah disubmit, tidak bisa diterima');
+                throw new Exception('PO sudah diterima');
             }
 
             if ($po->status !== 'submitted') {
-                throw new Exception('PO hanya bisa diterima dari status submitted');
+                throw new Exception('PO belum disubmit');
             }
 
-            // === STOCK IN ===
             foreach ($po->items as $item) {
                 $this->inventoryService->stockIn(
                     $po->store_id,
@@ -200,11 +195,11 @@ class PurchaseOrderService
         });
     }
 
-    /**
-     * =========================
-     * SYNC ITEMS
-     * =========================
-     */
+    /*
+    =========================
+    SYNC ITEMS (PRICING BASED)
+    =========================
+    */
     private function syncItems(PurchaseOrder $po, array $items): void
     {
         $totalQty    = 0;
@@ -213,10 +208,16 @@ class PurchaseOrderService
         foreach ($items as $item) {
 
             $uom = Unit::findOrFail($item['uom_id']);
+            $qtyBase = $item['qty_input'] * $uom->multiplier;
 
-            $qtyBase  = $item['qty_input'] * $uom->multiplier;
-            $subtotal = ($item['price'] * $qtyBase)
-                - ($item['discount'] ?? 0);
+            $price = $this->pricingService->resolvePrice(
+                $item['product_id'],
+                $po->supplier_id,
+                $qtyBase,
+                $po->order_date
+            );
+
+            $subtotal = $price * $qtyBase;
 
             PurchaseOrderItem::create([
                 'purchase_order_id' => $po->id,
@@ -224,8 +225,8 @@ class PurchaseOrderService
                 'uom_id'            => $uom->id,
                 'qty_input'         => $item['qty_input'],
                 'qty_base'          => $qtyBase,
-                'price'             => $item['price'],
-                'discount'          => $item['discount'] ?? 0,
+                'price'             => $price,
+                'discount'          => 0,
                 'subtotal'          => $subtotal,
             ]);
 
@@ -238,4 +239,6 @@ class PurchaseOrderService
             'total_amount' => $totalAmount,
         ]);
     }
+
+
 }
