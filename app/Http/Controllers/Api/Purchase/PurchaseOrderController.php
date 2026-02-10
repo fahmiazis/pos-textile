@@ -44,9 +44,10 @@ class PurchaseOrderController extends Controller
     public function show(int $id)
     {
         $po = PurchaseOrder::with([
+            'billing.payments',
+            'items.product',
             'store',
             'supplier',
-            'items.product',
         ])->findOrFail($id);
 
         return response()->json([
