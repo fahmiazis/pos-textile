@@ -24,7 +24,7 @@ class PurchasePaymentController extends Controller
     public function index(Request $request)
     {
         $query = \App\Models\Purchase\PurchasePayment::with([
-            'billing',
+            'billing.purchaseOrder',
             'supplier',
             'store'
         ]);
@@ -88,7 +88,7 @@ class PurchasePaymentController extends Controller
     public function show(int $id)
     {
         $payment = \App\Models\Purchase\PurchasePayment::with([
-            'billing',
+            'billing.purchaseOrder',
             'supplier',
             'store'
         ])->findOrFail($id);
