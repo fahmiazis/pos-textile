@@ -2,12 +2,38 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\Dashboard\DashboardController;
 
 Route::get('/ping', function () {
     return response()->json([
         'message' => 'API OK'
     ]);
 });
+
+
+/*
+|--------------------------------------------------------------------------
+| DASHBOARD
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['api.auth', 'permission:dashboard.view'])
+    ->prefix('dashboard')
+    ->group(function () {
+
+        Route::get('/so/to-billing', [DashboardController::class, 'totalSoToBilling']);
+        Route::get('/so/draft', [DashboardController::class, 'totalSoDraft']);
+        Route::get('/so/submitted', [DashboardController::class, 'totalSoSubmitted']);
+        Route::get('/so/completed', [DashboardController::class, 'totalSoCompleted']);
+        Route::get('/so/cancelled', [DashboardController::class, 'totalSoCancelled']);
+
+        Route::get('/revenue/collection', [DashboardController::class, 'totalRevenue']);
+        Route::get('/customers/total', [DashboardController::class, 'totalCustomers']);
+
+        Route::get('/products/top', [DashboardController::class, 'topProducts']);
+        Route::get('/products/bottom', [DashboardController::class, 'bottomProducts']);
+
+        Route::get('/transactions/recent', [DashboardController::class, 'recentTransactions']);
+    });
 
 
 /*
