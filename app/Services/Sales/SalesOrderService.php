@@ -50,6 +50,8 @@ class SalesOrderService
                 'status'      => 'draft',
                 'created_by'  => $userId,
                 'notes'       => $data['notes'] ?? null,
+                'cash_discount' => $data['cash_discount'] ?? 0,
+                'tax_included' => $data['tax_included'] ?? false,
             ]);
 
             $this->syncItems($order, $data['items']);
@@ -77,6 +79,12 @@ class SalesOrderService
                 'customer_id' => $data['customer_id'],
                 'order_date'  => $data['order_date'],
                 'notes'       => $data['notes'] ?? $order->notes,
+                'cash_discount' => array_key_exists('cash_discount', $data)
+                    ? $data['cash_discount']
+                    : $order->cash_discount,
+                'tax_included' => array_key_exists('tax_included', $data)
+                    ? (bool) $data['tax_included']
+                    : $order->tax_included,
             ]);
 
             $order->items()->delete();
@@ -114,9 +122,24 @@ class SalesOrderService
             }
 
             $subtotalAmount = (float) $order->subtotal_amount;
+            $cashDiscount = (float) ($order->cash_discount ?? 0);
+            if ($cashDiscount < 0) {
+                $cashDiscount = 0;
+            }
+            if ($cashDiscount > $subtotalAmount) {
+                $cashDiscount = $subtotalAmount;
+            }
+
+            $taxableAmount = $subtotalAmount - $cashDiscount;
             $taxRate = self::TAX_RATE;
-            $taxAmount = round($subtotalAmount * $taxRate, 2);
-            $totalAmount = $subtotalAmount + $taxAmount;
+
+            if ($order->tax_included) {
+                $taxAmount = round($taxableAmount * $taxRate / (1 + $taxRate), 2);
+                $totalAmount = $taxableAmount;
+            } else {
+                $taxAmount = round($taxableAmount * $taxRate, 2);
+                $totalAmount = $taxableAmount + $taxAmount;
+            }
 
             foreach ($order->items as $item) {
                 $this->inventoryService->reserveStock(
@@ -131,6 +154,7 @@ class SalesOrderService
             $order->update([
                 'status'       => 'submitted',
                 'submitted_at' => now(),
+                'cash_discount' => $cashDiscount,
                 'tax_rate'     => $taxRate,
                 'tax_amount'   => $taxAmount,
                 'total_amount' => $totalAmount,
@@ -234,12 +258,21 @@ class SalesOrderService
             $subtotalAmount += $subtotal;
         }
 
+        $cashDiscount = (float) ($order->cash_discount ?? 0);
+        if ($cashDiscount < 0) {
+            $cashDiscount = 0;
+        }
+        if ($cashDiscount > $subtotalAmount) {
+            $cashDiscount = $subtotalAmount;
+        }
+
         $order->update([
             'total_qty'    => $totalQty,
             'subtotal_amount' => $subtotalAmount,
+            'cash_discount' => $cashDiscount,
             'tax_rate'     => self::TAX_RATE,
             'tax_amount'   => 0,
-            'total_amount' => $subtotalAmount,
+            'total_amount' => $subtotalAmount - $cashDiscount,
         ]);
     }
 }

@@ -35,4 +35,12 @@ class PurchaseBilling extends Model
     {
         return $this->belongsTo(\App\Models\Master\Store::class);
     }
+
+    public function payments()
+    {
+        return $this->hasMany(
+            \App\Models\Purchase\PurchasePayment::class,
+            'purchase_billing_id'
+        );
+    }
 }

@@ -36,4 +36,13 @@ class PurchaseOrder extends Model
     {
         return $this->belongsTo(\App\Models\Master\Store::class);
     }
+
+    // PurchaseOrder.php
+    public function billing()
+    {
+        return $this->hasOne(
+            \App\Models\Purchase\PurchaseBilling::class,
+            'purchase_order_id'
+        );
+    }
 }
