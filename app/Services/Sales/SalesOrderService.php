@@ -10,6 +10,7 @@ use App\Services\Common\DocumentNumberService;
 use App\Services\Inventory\InventoryService;
 use App\Services\Master\SalesPricingService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Exception;
 
 class SalesOrderService
@@ -127,7 +128,9 @@ class SalesOrderService
                 $cashDiscount = 0;
             }
             if ($cashDiscount > $subtotalAmount) {
-                $cashDiscount = $subtotalAmount;
+                throw ValidationException::withMessages([
+                    'cash_discount' => 'Cash discount tidak boleh melebihi subtotal.',
+                ]);
             }
 
             $taxableAmount = $subtotalAmount - $cashDiscount;
@@ -263,7 +266,9 @@ class SalesOrderService
             $cashDiscount = 0;
         }
         if ($cashDiscount > $subtotalAmount) {
-            $cashDiscount = $subtotalAmount;
+            throw ValidationException::withMessages([
+                'cash_discount' => 'Cash discount tidak boleh melebihi subtotal.',
+            ]);
         }
 
         $order->update([
