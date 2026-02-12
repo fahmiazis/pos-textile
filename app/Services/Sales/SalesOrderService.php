@@ -52,7 +52,8 @@ class SalesOrderService
                 'created_by'  => $userId,
                 'notes'       => $data['notes'] ?? null,
                 'cash_discount' => $data['cash_discount'] ?? 0,
-                'tax_included' => $data['tax_included'] ?? false,
+                // tax_included tidak diambil dari request; default selalu true (include tax saat submit)
+                'tax_included' => true,
             ]);
 
             $this->syncItems($order, $data['items']);
@@ -83,9 +84,8 @@ class SalesOrderService
                 'cash_discount' => array_key_exists('cash_discount', $data)
                     ? $data['cash_discount']
                     : $order->cash_discount,
-                'tax_included' => array_key_exists('tax_included', $data)
-                    ? (bool) $data['tax_included']
-                    : $order->tax_included,
+                // tax_included tidak boleh diubah dari request
+                'tax_included' => $order->tax_included,
             ]);
 
             $order->items()->delete();
