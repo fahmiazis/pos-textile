@@ -93,6 +93,8 @@ class SalesOrderController extends Controller
         'subtotal_amount',
         'cash_discount',
         'tax_included',
+        'tax_rate',
+        'tax_amount',
         'total_amount',
         'created_by',
         'notes',
