@@ -22,6 +22,8 @@ class SalesOrder extends Model
     'cancelled_at',
     'total_qty',
     'subtotal_amount',
+    'cash_discount',
+    'tax_included',
     'tax_rate',
     'tax_amount',
     'total_amount',
@@ -59,6 +61,8 @@ class SalesOrder extends Model
   protected $casts = [
     'total_qty'    => 'float',
     'subtotal_amount' => 'float',
+    'cash_discount' => 'float',
+    'tax_included' => 'boolean',
     'tax_rate' => 'float',
     'tax_amount' => 'float',
     'total_amount' => 'float',

@@ -336,8 +336,7 @@ Route::middleware('api.auth')->group(function () {
             ->post('/orders/{id}/submit', [PurchaseOrderController::class, 'submit']);
         Route::middleware('permission:purchase_order.cancel')
             ->post('/orders/{id}/cancel', [PurchaseOrderController::class, 'cancel']);
-        Route::middleware('permission:purchase_order.receive')
-            ->post('/orders/{id}/receive', [PurchaseOrderController::class, 'receive']);
+        Route::post('/orders/{id}/receive', [PurchaseOrderController::class, 'receive']);
     });
 });
 
@@ -348,19 +347,11 @@ Route::middleware('api.auth')->group(function () {
 
 use App\Http\Controllers\Api\Purchase\PurchaseBillingController;
 
-Route::middleware('api.auth')
-    ->prefix('purchase')
-    ->group(function () {
+Route::middleware('api.auth')->prefix('purchase')->group(function () {
 
-        Route::middleware('permission:purchase_billing.view')
-            ->get('/billings', [PurchaseBillingController::class, 'index']);
-
-        Route::middleware('permission:purchase_billing.view')
-            ->get('/billings/{id}', [PurchaseBillingController::class, 'show']);
-
-        Route::middleware('permission:purchase_billing.create')
-            ->post('/billings/from-po/{id}', [PurchaseBillingController::class, 'createFromPo']);
-    });
+    Route::get('/billings', [PurchaseBillingController::class, 'index']);
+    Route::post('/billings/from-po/{id}', [PurchaseBillingController::class, 'createFromPo']);
+});
 
 /*|--------------------------------------------------------------------------
 | Purchase Payments
@@ -372,47 +363,18 @@ Route::middleware('api.auth')
     ->prefix('purchase')
     ->group(function () {
 
-        Route::middleware('permission:purchase_payment.view')
-            ->get('/payments', [PurchasePaymentController::class, 'index']);
+        Route::get(
+            '/payments',
+            [PurchasePaymentController::class, 'index']
+        );
 
-        Route::middleware('permission:purchase_payment.create')
-            ->post('/payments', [PurchasePaymentController::class, 'store']);
+        Route::post(
+            '/payments',
+            [PurchasePaymentController::class, 'store']
+        );
 
-        Route::middleware('permission:purchase_payment.view')
-            ->get('/payments/{id}', [PurchasePaymentController::class, 'show']);
-    });
-
-
-/*|--------------------------------------------------------------------------
-| Purchase Pricings
-|--------------------------------------------------------------------------*/
-
-use App\Http\Controllers\Api\Master\PurchasePricingController;
-
-Route::middleware('api.auth')
-    ->prefix('master')
-    ->group(function () {
-
-        // LIST + SEARCH
-        // ?product_id=
-        // ?supplier_id=
-        // ?is_active=
-        Route::middleware('permission:purchase_pricing.view')
-            ->get('/purchase-pricings', [PurchasePricingController::class, 'index']);
-
-        // SHOW BY ID
-        Route::middleware('permission:purchase_pricing.view')
-            ->get('/purchase-pricings/{id}', [PurchasePricingController::class, 'show']);
-
-        // CREATE
-        Route::middleware('permission:purchase_pricing.create')
-            ->post('/purchase-pricings', [PurchasePricingController::class, 'store']);
-
-        // UPDATE
-        Route::middleware('permission:purchase_pricing.update')
-            ->put('/purchase-pricings/{id}', [PurchasePricingController::class, 'update']);
-
-        // DELETE
-        Route::middleware('permission:purchase_pricing.delete')
-            ->delete('/purchase-pricings/{id}', [PurchasePricingController::class, 'destroy']);
+        Route::get(
+            '/payments/{id}',
+            [PurchasePaymentController::class, 'show']
+        );
     });

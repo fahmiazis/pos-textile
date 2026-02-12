@@ -65,6 +65,8 @@ class SalesOrderController extends Controller
       'customer_id' => 'required|exists:customers,id',
       'order_date' => 'required|date',
       'notes' => 'nullable|string',
+      'cash_discount' => 'nullable|numeric|min:0',
+      'tax_included' => 'nullable|boolean',
 
       'items' => 'required|array|min:1',
       'items.*.product_id' => 'required|exists:products,id',
@@ -88,6 +90,9 @@ class SalesOrderController extends Controller
         'status',
         'order_date',
         'total_qty',
+        'subtotal_amount',
+        'cash_discount',
+        'tax_included',
         'total_amount',
         'created_by',
         'notes',
@@ -105,6 +110,8 @@ class SalesOrderController extends Controller
     $data = $request->validate([
       'customer_id' => 'required|exists:customers,id',
       'order_date'  => 'required|date',
+      'cash_discount' => 'nullable|numeric|min:0',
+      'tax_included' => 'nullable|boolean',
 
       'items' => 'required|array|min:1',
       'items.*.product_id' => 'required|exists:products,id',
