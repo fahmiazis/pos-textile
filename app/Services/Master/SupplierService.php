@@ -13,9 +13,11 @@ class SupplierService
 
         if (!empty($params['search'])) {
             $search = $params['search'];
+
             $query->where(function ($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
-                    ->orWhere('name', 'like', "%{$search}%");
+                    ->orWhere('name', 'like', "%{$search}%")
+                    ->orWhere('nik', 'like', "%{$search}%");
             });
         }
 
@@ -28,13 +30,18 @@ class SupplierService
         }
 
         return $query
-            ->orderBy('id', 'desc')
+            ->orderByDesc('id')
             ->paginate($params['per_page'] ?? 10);
     }
 
     public function create(array $data)
     {
         return DB::transaction(function () use ($data) {
+
+            if (!empty($data['nik'])) {
+                $data['nik'] = trim($data['nik']);
+            }
+
             $data['code']      = $this->generateCode();
             $data['is_active'] = $data['is_active'] ?? true;
 
@@ -49,10 +56,18 @@ class SupplierService
 
     public function update(int $id, array $data)
     {
-        $supplier = Supplier::findOrFail($id);
-        $supplier->update($data);
+        return DB::transaction(function () use ($id, $data) {
 
-        return $supplier;
+            $supplier = Supplier::findOrFail($id);
+
+            if (array_key_exists('nik', $data) && !empty($data['nik'])) {
+                $data['nik'] = trim($data['nik']);
+            }
+
+            $supplier->update($data);
+
+            return $supplier;
+        });
     }
 
     /**
@@ -61,6 +76,7 @@ class SupplierService
     public function delete(int $id)
     {
         return DB::transaction(function () use ($id) {
+
             $supplier = Supplier::findOrFail($id);
 
             $supplier->update([
@@ -79,6 +95,7 @@ class SupplierService
     public function restore(int $id)
     {
         return DB::transaction(function () use ($id) {
+
             $supplier = Supplier::withTrashed()
                 ->with('defaultStore')
                 ->findOrFail($id);
@@ -100,17 +117,12 @@ class SupplierService
     {
         $prefix = 'SUP-';
 
-        $lastCode = Supplier::withTrashed()
-            ->where('code', 'like', $prefix . '%')
-            ->orderBy('code', 'desc')
-            ->value('code');
+        $lastNumber = Supplier::withTrashed()
+            ->selectRaw("MAX(CAST(SUBSTRING(code, 5) AS UNSIGNED)) as max_number")
+            ->value('max_number');
 
-        if (!$lastCode) {
-            return $prefix . '0001';
-        }
+        $nextNumber = $lastNumber ? $lastNumber + 1 : 1;
 
-        $number = (int) str_replace($prefix, '', $lastCode);
-
-        return $prefix . str_pad($number + 1, 4, '0', STR_PAD_LEFT);
+        return $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
 }
