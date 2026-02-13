@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Master;
 use App\Http\Controllers\Controller;
 use App\Services\Master\SupplierService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class SupplierController extends Controller
 {
@@ -31,6 +32,7 @@ class SupplierController extends Controller
             'name'              => 'required|string|max:150',
             'phone'             => 'nullable|string|max:20',
             'address'           => 'nullable|string|max:255',
+            'nik'               => 'nullable|digits:16|unique:suppliers,nik',
             'payment_term_days' => 'nullable|integer|min:0',
             'default_store_id'  => 'nullable|exists:stores,id',
             'is_active'         => 'boolean',
@@ -46,7 +48,7 @@ class SupplierController extends Controller
     }
 
     // GET /api/master/suppliers/{id}
-    public function show($id)
+    public function show(int $id)
     {
         $supplier = $this->supplierService->find($id);
 
@@ -58,12 +60,17 @@ class SupplierController extends Controller
     }
 
     // PUT /api/master/suppliers/{id}
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id)
     {
         $validated = $request->validate([
             'name'              => 'required|string|max:150',
             'phone'             => 'nullable|string|max:20',
             'address'           => 'nullable|string|max:255',
+            'nik'               => [
+                'nullable',
+                'digits:16',
+                Rule::unique('suppliers', 'nik')->ignore($id),
+            ],
             'payment_term_days' => 'nullable|integer|min:0',
             'default_store_id'  => 'nullable|exists:stores,id',
             'is_active'         => 'boolean',
@@ -79,7 +86,7 @@ class SupplierController extends Controller
     }
 
     // DELETE /api/master/suppliers/{id}
-    public function destroy($id)
+    public function destroy(int $id)
     {
         $this->supplierService->delete($id);
 
@@ -90,7 +97,7 @@ class SupplierController extends Controller
     }
 
     // PUT /api/master/suppliers/{id}/restore
-    public function restore($id)
+    public function restore(int $id)
     {
         $supplier = $this->supplierService->restore($id);
 

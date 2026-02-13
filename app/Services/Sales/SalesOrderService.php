@@ -10,6 +10,7 @@ use App\Services\Common\DocumentNumberService;
 use App\Services\Inventory\InventoryService;
 use App\Services\Master\SalesPricingService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Exception;
 
 class SalesOrderService
@@ -38,6 +39,10 @@ class SalesOrderService
 
         return DB::transaction(function () use ($data, $userId) {
 
+            $taxIncluded = array_key_exists('tax_included', $data)
+                ? (bool) $data['tax_included']
+                : false;
+
             $order = SalesOrder::create([
                 'so_number'   => DocumentNumberService::generate(
                     'sales_orders',
@@ -51,7 +56,7 @@ class SalesOrderService
                 'created_by'  => $userId,
                 'notes'       => $data['notes'] ?? null,
                 'cash_discount' => $data['cash_discount'] ?? 0,
-                'tax_included' => $data['tax_included'] ?? false,
+                'tax_included' => $taxIncluded,
             ]);
 
             $this->syncItems($order, $data['items']);
@@ -127,18 +132,32 @@ class SalesOrderService
                 $cashDiscount = 0;
             }
             if ($cashDiscount > $subtotalAmount) {
-                $cashDiscount = $subtotalAmount;
+                throw ValidationException::withMessages([
+                    'cash_discount' => 'Cash discount tidak boleh melebihi subtotal.',
+                ]);
             }
 
             $taxableAmount = $subtotalAmount - $cashDiscount;
             $taxRate = self::TAX_RATE;
 
             if ($order->tax_included) {
-                $taxAmount = round($taxableAmount * $taxRate / (1 + $taxRate), 2);
-                $totalAmount = $taxableAmount;
+                // Jika sudah include, pakai nilai yang sudah dihitung saat create/update draft
+                $taxAmount = $order->tax_amount;
+                $totalAmount = $order->total_amount;
+
+                // Fallback untuk data lama yang belum ada hitungan tax
+                if ($taxAmount === null || $totalAmount === null) {
+                    [$taxAmount, $totalAmount] = $this->calculateTaxTotals(
+                        $taxableAmount,
+                        true
+                    );
+                }
             } else {
-                $taxAmount = round($taxableAmount * $taxRate, 2);
-                $totalAmount = $taxableAmount + $taxAmount;
+                // Exclude: hitung pajak saat submit
+                [$taxAmount, $totalAmount] = $this->calculateTaxTotals(
+                    $taxableAmount,
+                    true
+                );
             }
 
             foreach ($order->items as $item) {
@@ -155,6 +174,8 @@ class SalesOrderService
                 'status'       => 'submitted',
                 'submitted_at' => now(),
                 'cash_discount' => $cashDiscount,
+                // setelah submit, total sudah include tax
+                'tax_included' => true,
                 'tax_rate'     => $taxRate,
                 'tax_amount'   => $taxAmount,
                 'total_amount' => $totalAmount,
@@ -263,16 +284,41 @@ class SalesOrderService
             $cashDiscount = 0;
         }
         if ($cashDiscount > $subtotalAmount) {
-            $cashDiscount = $subtotalAmount;
+            throw ValidationException::withMessages([
+                'cash_discount' => 'Cash discount tidak boleh melebihi subtotal.',
+            ]);
         }
+
+        $taxableAmount = $subtotalAmount - $cashDiscount;
+        [$taxAmount, $totalAmount] = $this->calculateTaxTotals(
+            $taxableAmount,
+            (bool) $order->tax_included
+        );
 
         $order->update([
             'total_qty'    => $totalQty,
             'subtotal_amount' => $subtotalAmount,
             'cash_discount' => $cashDiscount,
             'tax_rate'     => self::TAX_RATE,
-            'tax_amount'   => 0,
-            'total_amount' => $subtotalAmount - $cashDiscount,
+            'tax_amount'   => $taxAmount,
+            'total_amount' => $totalAmount,
         ]);
+    }
+
+    private function calculateTaxTotals(
+        float $taxableAmount,
+        bool $shouldCompute
+    ): array {
+        $taxRate = self::TAX_RATE;
+
+        if ($shouldCompute) {
+            $taxAmount = round($taxableAmount * $taxRate, 2);
+            $totalAmount = $taxableAmount + $taxAmount;
+        } else {
+            $taxAmount = 0;
+            $totalAmount = $taxableAmount;
+        }
+
+        return [$taxAmount, $totalAmount];
     }
 }

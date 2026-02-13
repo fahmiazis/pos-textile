@@ -13,6 +13,7 @@ class Supplier extends Model
         'name',
         'phone',
         'address',
+        'nik',
         'payment_term_days',
         'default_store_id',
         'is_active',
