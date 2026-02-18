@@ -55,6 +55,39 @@ class SalesOrderController extends Controller
     ]);
   }
 
+  public function search(Request $request)
+  {
+    $data = $request->validate([
+      'so_number' => 'required|string',
+      'status' => 'nullable',
+    ]);
+
+    $keyword = trim($data['so_number']);
+
+    $query = SalesOrder::with('customer')
+      ->where('so_number', 'like', '%' . $keyword . '%');
+
+    if ($request->has('status')) {
+      $statuses = is_array($request->status)
+        ? $request->status
+        : [$request->status];
+
+      $query->whereIn('status', $statuses);
+    }
+
+    return response()->json([
+      'success' => true,
+      'meta' => [
+        'filters' => [
+          'so_number' => $keyword,
+          'status' => $request->status,
+        ],
+        'total' => $query->count(),
+      ],
+      'data' => $query->latest()->get(),
+    ]);
+  }
+
   /**
    * CREATE SALES ORDER (DRAFT)
    */
