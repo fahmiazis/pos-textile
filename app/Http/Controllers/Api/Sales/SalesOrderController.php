@@ -58,14 +58,25 @@ class SalesOrderController extends Controller
   public function search(Request $request)
   {
     $data = $request->validate([
-      'so_number' => 'required|string',
+      'search' => 'nullable|string',
+      'so_number' => 'nullable|string',
       'status' => 'nullable',
     ]);
 
-    $keyword = trim($data['so_number']);
+    $keyword = trim($data['search'] ?? $data['so_number'] ?? '');
 
-    $query = SalesOrder::with('customer')
-      ->where('so_number', 'like', '%' . $keyword . '%');
+    $query = SalesOrder::with('customer');
+
+    if ($keyword !== '') {
+      $query->where(function ($q) use ($keyword) {
+        $q->where('so_number', 'like', '%' . $keyword . '%')
+          ->orWhereHas('customer', function ($customerQuery) use ($keyword) {
+            $customerQuery
+              ->where('name', 'like', '%' . $keyword . '%')
+              ->orWhere('code', 'like', '%' . $keyword . '%');
+          });
+      });
+    }
 
     if ($request->has('status')) {
       $statuses = is_array($request->status)
@@ -79,7 +90,7 @@ class SalesOrderController extends Controller
       'success' => true,
       'meta' => [
         'filters' => [
-          'so_number' => $keyword,
+          'search' => $keyword !== '' ? $keyword : null,
           'status' => $request->status,
         ],
         'total' => $query->count(),
