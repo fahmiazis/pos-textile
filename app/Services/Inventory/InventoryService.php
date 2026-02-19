@@ -51,6 +51,7 @@ class InventoryService
       }
 
       // update inventory snapshot
+      $stockBefore = $inventory->stock_on_hand;
       $inventory->stock_reserved += $qty;
       $inventory->stock_available -= $qty;
       $inventory->save();
@@ -60,6 +61,8 @@ class InventoryService
         'inventory_id' => $inventory->id,
         'type' => 'reserve',
         'qty' => $qty,
+        'stock_before' => $stockBefore,
+        'stock_after' => $stockBefore,
         'reference_type' => $referenceType,
         'reference_id' => $referenceId,
         'notes' => 'Reserve stock from sales order',
@@ -90,6 +93,7 @@ class InventoryService
         throw new Exception('Reserved stock tidak mencukupi');
       }
 
+      $stockBefore = $inventory->stock_on_hand;
       $inventory->stock_reserved -= $qty;
       $inventory->stock_available += $qty;
       $inventory->save();
@@ -98,6 +102,8 @@ class InventoryService
         'inventory_id' => $inventory->id,
         'type' => 'release',
         'qty' => $qty,
+        'stock_before' => $stockBefore,
+        'stock_after' => $stockBefore,
         'reference_type' => $referenceType,
         'reference_id' => $referenceId,
         'notes' => 'Release reserved stock',
@@ -128,6 +134,7 @@ class InventoryService
         throw new Exception('Reserved stock tidak cukup untuk stock out');
       }
 
+      $stockBefore = $inventory->stock_on_hand;
       $inventory->stock_reserved -= $qty;
       $inventory->stock_on_hand -= $qty;
       $inventory->save();
@@ -136,6 +143,8 @@ class InventoryService
         'inventory_id' => $inventory->id,
         'type' => 'out',
         'qty' => $qty,
+        'stock_before' => $stockBefore,
+        'stock_after' => $inventory->stock_on_hand,
         'reference_type' => $referenceType,
         'reference_id' => $referenceId,
         'notes' => 'Stock out after payment',
@@ -162,6 +171,7 @@ class InventoryService
     ) {
       $inventory = $this->initInventory($storeId, $productId);
 
+      $stockBefore = $inventory->stock_on_hand;
       $inventory->stock_on_hand += $qty;
       $inventory->stock_available += $qty;
       $inventory->save();
@@ -170,6 +180,8 @@ class InventoryService
         'inventory_id' => $inventory->id,
         'type' => 'in',
         'qty' => $qty,
+        'stock_before' => $stockBefore,
+        'stock_after' => $inventory->stock_on_hand,
         'reference_type' => $referenceType,
         'reference_id' => $referenceId,
         'notes' => 'Stock in',

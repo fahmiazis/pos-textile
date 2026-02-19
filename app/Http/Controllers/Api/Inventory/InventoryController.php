@@ -56,6 +56,8 @@ class InventoryController extends Controller
    */
   public function movements(Request $request)
   {
+    $withBalance = $request->boolean('with_balance');
+
     $query = InventoryMovement::query()
       ->with([
         'inventory.store:id,code,name',
@@ -114,6 +116,10 @@ class InventoryController extends Controller
 
       return $movement;
     });
+
+    if (!$withBalance) {
+      $movements->each->makeHidden(['stock_before', 'stock_after']);
+    }
 
     return response()->json([
       'data' => $movements
