@@ -18,8 +18,6 @@ class InventoryService
    */
   public function getMovements(array $filters)
   {
-    $withBalance = !empty($filters['with_balance']);
-
     $query = InventoryMovement::query()
       ->with([
         'inventory.store:id,code,name',
@@ -78,10 +76,6 @@ class InventoryService
 
       return $movement;
     });
-
-    if (!$withBalance) {
-      $movements->each->makeHidden(['stock_before', 'stock_after']);
-    }
 
     return $movements;
   }
