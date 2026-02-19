@@ -4,11 +4,115 @@ namespace App\Services\Inventory;
 
 use App\Models\Inventory\Inventory;
 use App\Models\Inventory\InventoryMovement;
+use App\Models\Purchase\PurchaseOrder;
+use App\Models\Sales\Billing;
+use App\Models\Sales\Refund;
+use App\Models\Sales\SalesOrder;
 use Illuminate\Support\Facades\DB;
 use Exception;
 
 class InventoryService
 {
+  /**
+   * Inventory movements (ledger) with optional filters.
+   */
+  public function getMovements(array $filters)
+  {
+    $withBalance = !empty($filters['with_balance']);
+
+    $query = InventoryMovement::query()
+      ->with([
+        'inventory.store:id,code,name',
+        'inventory.product:id,sku,name'
+      ]);
+
+    if (!empty($filters['store_id'])) {
+      $query->whereHas(
+        'inventory',
+        fn($q) =>
+        $q->where('store_id', $filters['store_id'])
+      );
+    }
+
+    if (!empty($filters['product_id'])) {
+      $query->whereHas(
+        'inventory',
+        fn($q) =>
+        $q->where('product_id', $filters['product_id'])
+      );
+    }
+
+    if (!empty($filters['reference_type'])) {
+      $query->where('reference_type', $filters['reference_type']);
+    }
+
+    if (!empty($filters['reference_id'])) {
+      $query->where('reference_id', $filters['reference_id']);
+    }
+
+    $movements = $query
+      ->orderByDesc('id')
+      ->limit(200)
+      ->get();
+
+    $referenceIdsByType = $movements
+      ->groupBy('reference_type')
+      ->map(fn($items) => $items->pluck('reference_id')->filter()->unique()->values());
+
+    $referenceNumbersByType = [
+      'sales_order' => SalesOrder::whereIn('id', $referenceIdsByType->get('sales_order', []))
+        ->pluck('so_number', 'id'),
+      'billing' => Billing::whereIn('id', $referenceIdsByType->get('billing', []))
+        ->pluck('invoice_number', 'id'),
+      'purchase_order' => PurchaseOrder::whereIn('id', $referenceIdsByType->get('purchase_order', []))
+        ->pluck('po_number', 'id'),
+      'refund' => Refund::whereIn('id', $referenceIdsByType->get('refund', []))
+        ->pluck('refund_number', 'id'),
+    ];
+
+    $movements->transform(function ($movement) use ($referenceNumbersByType) {
+      $type = $movement->reference_type;
+      $id = $movement->reference_id;
+
+      $movement->reference_number = $referenceNumbersByType[$type]->get($id) ?? null;
+
+      return $movement;
+    });
+
+    if (!$withBalance) {
+      $movements->each->makeHidden(['stock_before', 'stock_after']);
+    }
+
+    return $movements;
+  }
+
+  /**
+   * Inventory availability with optional filters.
+   */
+  public function getAvailability(array $filters)
+  {
+    $query = Inventory::query()
+      ->with([
+        'store:id,code,name',
+        'product:id,sku,name,base_uom_id',
+        'product.baseUom:id,code,name'
+      ]);
+
+    if (!empty($filters['store_id'])) {
+      $query->where('store_id', $filters['store_id']);
+    }
+
+    if (!empty($filters['product_id'])) {
+      $query->where('product_id', $filters['product_id']);
+    }
+
+    if (!empty($filters['available_only'])) {
+      $query->where('stock_available', '>', 0);
+    }
+
+    return $query->orderBy('id')->get();
+  }
+
   /**
    * Pastikan inventory row ada
    */
