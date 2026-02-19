@@ -18,7 +18,17 @@ class SalesOrderController extends Controller
 
   public function index(Request $request)
   {
-    $result = $this->service->getList($request->only(['status']));
+    if ($request->filled('search') || $request->filled('so_number')) {
+      $data = $request->validate([
+        'search' => 'nullable|string',
+        'so_number' => 'nullable|string',
+        'status' => 'nullable',
+      ]);
+
+      $result = $this->service->search($data);
+    } else {
+      $result = $this->service->getList($request->only(['status']));
+    }
 
     return response()->json([
       'success' => true,
