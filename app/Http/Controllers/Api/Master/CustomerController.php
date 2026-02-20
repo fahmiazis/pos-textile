@@ -40,6 +40,7 @@ class CustomerController extends Controller
             'nik'          => 'required_if:is_pkp,1|nullable|string|max:30',
             'sppkp'        => 'required_if:is_pkp,1|nullable|string|max:50',
             'npwp_address' => 'required_if:is_pkp,1|nullable|string',
+            'email'        => 'nullable|email|max:100',
         ]);
 
         $customer = $this->customerService->create($validated);
@@ -79,6 +80,7 @@ class CustomerController extends Controller
             'nik'          => 'required_if:is_pkp,1|nullable|string|max:30',
             'sppkp'        => 'required_if:is_pkp,1|nullable|string|max:50',
             'npwp_address' => 'required_if:is_pkp,1|nullable|string',
+            'email'        => 'nullable|email|max:100',
         ]);
 
         $customer = $this->customerService->update($id, $validated);
