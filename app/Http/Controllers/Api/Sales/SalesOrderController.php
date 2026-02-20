@@ -18,25 +18,27 @@ class SalesOrderController extends Controller
 
   public function index(Request $request)
   {
-    $query = SalesOrder::with('customer');
+    if ($request->filled('search') || $request->filled('so_number')) {
+      $data = $request->validate([
+        'search' => 'nullable|string',
+        'so_number' => 'nullable|string',
+        'status' => 'nullable',
+      ]);
 
-    if ($request->has('status')) {
-      $statuses = is_array($request->status)
-        ? $request->status
-        : [$request->status];
-
-      $query->whereIn('status', $statuses);
+      $result = $this->service->search($data);
+    } else {
+      $result = $this->service->getList($request->only(['status']));
     }
 
     return response()->json([
       'success' => true,
       'meta' => [
         'filters' => [
-          'status' => $request->status
+          'status' => $result['filters']['status']
         ],
-        'total' => $query->count()
+        'total' => $result['total']
       ],
-      'data' => $query->latest()->get()
+      'data' => $result['data']
     ]);
   }
 
@@ -58,33 +60,22 @@ class SalesOrderController extends Controller
   public function search(Request $request)
   {
     $data = $request->validate([
-      'so_number' => 'required|string',
+      'search' => 'nullable|string',
+      'so_number' => 'nullable|string',
       'status' => 'nullable',
     ]);
-
-    $keyword = trim($data['so_number']);
-
-    $query = SalesOrder::with('customer')
-      ->where('so_number', 'like', '%' . $keyword . '%');
-
-    if ($request->has('status')) {
-      $statuses = is_array($request->status)
-        ? $request->status
-        : [$request->status];
-
-      $query->whereIn('status', $statuses);
-    }
+    $result = $this->service->search($data);
 
     return response()->json([
       'success' => true,
       'meta' => [
         'filters' => [
-          'so_number' => $keyword,
-          'status' => $request->status,
+          'search' => $result['filters']['search'],
+          'status' => $result['filters']['status'],
         ],
-        'total' => $query->count(),
+        'total' => $result['total'],
       ],
-      'data' => $query->latest()->get(),
+      'data' => $result['data'],
     ]);
   }
 
@@ -175,51 +166,13 @@ class SalesOrderController extends Controller
    */
   public function submit(int $id)
   {
-    try {
-      $order = $this->service->submit($id);
+    $result = $this->service->submitWithResponse($id);
 
-      return response()->json([
-        'success' => true,
-        'message' => 'Sales order berhasil disubmit. Total sudah termasuk PPN 11%.',
-        'data' => $order->load([
-          'items.product',
-          'customer',
-          'store'
-        ])
-      ]);
-    } catch (\Exception $e) {
-      $order = SalesOrder::with(['customer', 'store'])
-        ->find($id);
-
-      if ($order && $order->status === 'cancelled') {
-        return response()->json([
-          'success' => false,
-          'message' => 'Sales Order Cancelled tidak bisa disubmit',
-          'data' => [
-            'id' => $order->id,
-            'so_number' => $order->so_number,
-            'status' => $order->status,
-            'order_date' => $order->order_date,
-            'submitted_at' => $order->submitted_at,
-            'cancelled_at' => $order->cancelled_at,
-            'total_amount' => $order->total_amount,
-            'customer' => $order->customer ? [
-              'id' => $order->customer->id,
-              'name' => $order->customer->name,
-            ] : null,
-            'store' => $order->store ? [
-              'id' => $order->store->id,
-              'name' => $order->store->name,
-            ] : null,
-          ],
-        ], 400);
-      }
-
-      return response()->json([
-        'success' => false,
-        'message' => $e->getMessage()
-      ], 400);
-    }
+    return response()->json([
+      'success' => $result['ok'],
+      'message' => $result['message'],
+      'data' => $result['data'] ?? null,
+    ], $result['status']);
   }
 
   /**
@@ -227,40 +180,27 @@ class SalesOrderController extends Controller
    */
   public function cancel(int $id)
   {
-    try {
-      $order = $this->service->cancel($id);
+    $result = $this->service->cancelWithResponse($id);
 
-      return response()->json([
-        'success' => true,
-        'message' => 'Sales order berhasil dibatalkan',
-        'data' => $order
-      ]);
-    } catch (\Exception $e) {
-      return response()->json([
-        'success' => false,
-        'message' => $e->getMessage()
-      ], 400);
-    }
+    return response()->json([
+      'success' => $result['ok'],
+      'message' => $result['message'],
+      'data' => $result['data'] ?? null,
+    ], $result['status']);
   }
 
 
   public function billable()
   {
-    $orders = SalesOrder::with('customer')
-      ->where('status', 'submitted')
-      ->whereDoesntHave('billings', function ($q) {
-        $q->whereNotIn('status', ['cancelled']);
-      })
-      ->latest()
-      ->get();
+    $result = $this->service->getBillable();
 
     return response()->json([
       'success' => true,
       'meta' => [
         'description' => 'Sales order submitted dan belum memiliki billing aktif',
-        'total' => $orders->count(),
+        'total' => $result['total'],
       ],
-      'data' => $orders
+      'data' => $result['data']
     ]);
   }
 }

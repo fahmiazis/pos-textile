@@ -15,6 +15,8 @@ class InventoryMovement extends Model
     'inventory_id',
     'type',
     'qty',
+    'stock_before',
+    'stock_after',
     'reference_type',
     'reference_id',
     'notes',

@@ -66,6 +66,165 @@ class SalesOrderService
     }
 
     /**
+     * LIST SALES ORDERS
+     */
+    public function getList(array $filters): array
+    {
+        $query = SalesOrder::with('customer');
+
+        if (!empty($filters['status'])) {
+            $statuses = is_array($filters['status'])
+                ? $filters['status']
+                : [$filters['status']];
+
+            $query->whereIn('status', $statuses);
+        }
+
+        return [
+            'filters' => [
+                'status' => $filters['status'] ?? null,
+            ],
+            'total' => $query->count(),
+            'data' => $query->latest()->get(),
+        ];
+    }
+
+    /**
+     * SEARCH SALES ORDERS
+     */
+    public function search(array $filters): array
+    {
+        $keyword = trim($filters['search'] ?? $filters['so_number'] ?? '');
+
+        $query = SalesOrder::with('customer');
+
+        if ($keyword !== '') {
+            $query->where(function ($q) use ($keyword) {
+                $q->where('so_number', 'like', '%' . $keyword . '%')
+                    ->orWhereHas('customer', function ($customerQuery) use ($keyword) {
+                        $customerQuery
+                            ->where('name', 'like', '%' . $keyword . '%')
+                            ->orWhere('code', 'like', '%' . $keyword . '%');
+                    });
+            });
+        }
+
+        if (!empty($filters['status'])) {
+            $statuses = is_array($filters['status'])
+                ? $filters['status']
+                : [$filters['status']];
+
+            $query->whereIn('status', $statuses);
+        }
+
+        return [
+            'filters' => [
+                'search' => $keyword !== '' ? $keyword : null,
+                'status' => $filters['status'] ?? null,
+            ],
+            'total' => $query->count(),
+            'data' => $query->latest()->get(),
+        ];
+    }
+
+    /**
+     * BILLABLE SALES ORDERS
+     */
+    public function getBillable(): array
+    {
+        $orders = SalesOrder::with('customer')
+            ->where('status', 'submitted')
+            ->whereDoesntHave('billings', function ($q) {
+                $q->whereNotIn('status', ['cancelled']);
+            })
+            ->latest()
+            ->get();
+
+        return [
+            'total' => $orders->count(),
+            'data' => $orders,
+        ];
+    }
+
+    /**
+     * SUBMIT SALES ORDER (with response payload)
+     */
+    public function submitWithResponse(int $id): array
+    {
+        try {
+            $order = $this->submit($id);
+
+            return [
+                'ok' => true,
+                'status' => 200,
+                'message' => 'Sales order berhasil disubmit. Total sudah termasuk PPN 11%.',
+                'data' => $order->load([
+                    'items.product',
+                    'customer',
+                    'store'
+                ]),
+            ];
+        } catch (Exception $e) {
+            $order = SalesOrder::with(['customer', 'store'])
+                ->find($id);
+
+            if ($order && $order->status === 'cancelled') {
+                return [
+                    'ok' => false,
+                    'status' => 400,
+                    'message' => 'Sales Order Cancelled tidak bisa disubmit',
+                    'data' => [
+                        'id' => $order->id,
+                        'so_number' => $order->so_number,
+                        'status' => $order->status,
+                        'order_date' => $order->order_date,
+                        'submitted_at' => $order->submitted_at,
+                        'cancelled_at' => $order->cancelled_at,
+                        'total_amount' => $order->total_amount,
+                        'customer' => $order->customer ? [
+                            'id' => $order->customer->id,
+                            'name' => $order->customer->name,
+                        ] : null,
+                        'store' => $order->store ? [
+                            'id' => $order->store->id,
+                            'name' => $order->store->name,
+                        ] : null,
+                    ],
+                ];
+            }
+
+            return [
+                'ok' => false,
+                'status' => 400,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * CANCEL SALES ORDER (with response payload)
+     */
+    public function cancelWithResponse(int $id): array
+    {
+        try {
+            $order = $this->cancel($id);
+
+            return [
+                'ok' => true,
+                'status' => 200,
+                'message' => 'Sales order berhasil dibatalkan',
+                'data' => $order,
+            ];
+        } catch (Exception $e) {
+            return [
+                'ok' => false,
+                'status' => 400,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
      * UPDATE SALES ORDER (DRAFT)
      */
     public function updateDraft(int $id, array $data): SalesOrder
