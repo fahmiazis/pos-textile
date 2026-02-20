@@ -21,7 +21,8 @@ class InventoryService
     $query = InventoryMovement::query()
       ->with([
         'inventory.store:id,code,name',
-        'inventory.product:id,sku,name'
+        'inventory.product:id,sku,name,base_uom_id',
+        'inventory.product.baseUom:id,code,name'
       ]);
 
     if (!empty($filters['store_id'])) {
@@ -73,6 +74,14 @@ class InventoryService
       $id = $movement->reference_id;
 
       $movement->reference_number = $referenceNumbersByType[$type]->get($id) ?? null;
+      $uom = $movement->inventory?->product?->baseUom;
+      $movement->uom = $uom
+        ? [
+          'id' => $uom->id,
+          'code' => $uom->code,
+          'name' => $uom->name,
+        ]
+        : null;
 
       return $movement;
     });
