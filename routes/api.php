@@ -54,6 +54,7 @@ use App\Http\Controllers\Api\Master\VehicleController;
 use App\Http\Controllers\Api\Master\DriverController;
 use App\Http\Controllers\Api\Master\SalesPricingController;
 use App\Http\Controllers\Api\Master\PurchasePricingController;
+use App\Http\Controllers\Api\Master\CustomerBankAccountController;
 
 
 Route::post('/auth/login', [AuthController::class, 'login'])
@@ -160,6 +161,7 @@ Route::middleware('api.auth')->group(function () {
         Route::middleware('permission:driver.delete')->delete('/drivers/{driver}', [DriverController::class, 'destroy']);
         Route::middleware('permission:driver.update')->put('/drivers/{driver}/restore', [DriverController::class, 'restore']);
 
+        /* ====== SALES PRICINGS ====== */
         Route::middleware('permission:sales_pricing.view')
             ->get('/sales-pricings', [SalesPricingController::class, 'index']);
         Route::middleware('permission:sales_pricing.create')
@@ -176,6 +178,25 @@ Route::middleware('api.auth')->group(function () {
             ->put('/purchase-pricings/{id}', [PurchasePricingController::class, 'update']);
         Route::middleware('permission:purchase_pricing.delete')
             ->delete('/purchase-pricings/{id}', [PurchasePricingController::class, 'destroy']);
+
+        /* ====== CUSTOMER BANK ACCOUNTS ====== */
+        Route::middleware('permission:customer_bank_account.view')
+            ->get('/customer-bank-accounts', [CustomerBankAccountController::class, 'index']);
+
+        Route::middleware('permission:customer_bank_account.view')
+            ->get('/customer-bank-accounts/{id}', [CustomerBankAccountController::class, 'show']);
+
+        Route::middleware('permission:customer_bank_account.create')
+            ->post('/customer-bank-accounts', [CustomerBankAccountController::class, 'store']);
+
+        Route::middleware('permission:customer_bank_account.update')
+            ->put('/customer-bank-accounts/{id}', [CustomerBankAccountController::class, 'update']);
+
+        Route::middleware('permission:customer_bank_account.delete')
+            ->delete('/customer-bank-accounts/{id}', [CustomerBankAccountController::class, 'destroy']);
+
+        Route::middleware('permission:customer_bank_account.restore')
+    ->put('/customer-bank-accounts/{id}/restore', [CustomerBankAccountController::class, 'restore']);
     });
 });
 

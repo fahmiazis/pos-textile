@@ -40,13 +40,20 @@ class CustomerService
     public function create(array $data)
     {
         return DB::transaction(function () use ($data) {
+
             $data['code']      = $this->generateCode();
             $data['is_active'] = $data['is_active'] ?? true;
+            $data['is_pkp']    = $data['is_pkp'] ?? false;
+
+            if (!$data['is_pkp']) {
+                $data['nik']          = null;
+                $data['sppkp']        = null;
+                $data['npwp_address'] = null;
+            }
 
             return Customer::create($data);
         });
     }
-
     public function find(int $id)
     {
         return Customer::with('defaultStore')->findOrFail($id);
@@ -55,6 +62,15 @@ class CustomerService
     public function update(int $id, array $data)
     {
         $customer = Customer::findOrFail($id);
+
+        $data['is_pkp'] = $data['is_pkp'] ?? false;
+
+        if (!$data['is_pkp']) {
+            $data['nik']          = null;
+            $data['sppkp']        = null;
+            $data['npwp_address'] = null;
+        }
+
         $customer->update($data);
 
         return $customer;
@@ -105,17 +121,10 @@ class CustomerService
     {
         $prefix = 'CUST-';
 
-        $lastCode = Customer::withTrashed()
-            ->where('code', 'like', $prefix . '%')
-            ->orderBy('code', 'desc')
-            ->value('code');
+        $lastId = Customer::withTrashed()->max('id');
 
-        if (!$lastCode) {
-            return $prefix . '0001';
-        }
+        $nextNumber = $lastId ? $lastId + 1 : 1;
 
-        $number = (int) str_replace($prefix, '', $lastCode);
-
-        return $prefix . str_pad($number + 1, 4, '0', STR_PAD_LEFT);
+        return $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
 }
