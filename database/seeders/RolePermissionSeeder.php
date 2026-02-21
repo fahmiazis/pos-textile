@@ -11,16 +11,16 @@ class RolePermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        // WAJIB: reset cache permission
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         /*
-        | MASTER DATA (CRUD)
+        | MASTER DATA (CRUD + RESTORE)
         */
         $masterModules = [
             'category',
             'store',
             'customer',
+            'customer_bank_account', // ✅ ditambahkan
             'supplier',
             'product',
             'discount',
@@ -30,7 +30,7 @@ class RolePermissionSeeder extends Seeder
             'unit',
         ];
 
-        $masterActions = ['view', 'create', 'update', 'delete'];
+        $masterActions = ['view', 'create', 'update', 'delete', 'restore'];
 
         foreach ($masterModules as $module) {
             foreach ($masterActions as $action) {
@@ -83,6 +83,11 @@ class RolePermissionSeeder extends Seeder
 
             'purchase_payment.view',
             'purchase_payment.create',
+
+            'purchase_pricing.view',
+            'purchase_pricing.create',
+            'purchase_pricing.update',
+            'purchase_pricing.delete',
         ];
 
         foreach ($purchasePermissions as $permission) {
@@ -106,6 +111,14 @@ class RolePermissionSeeder extends Seeder
                 'guard_name' => 'web',
             ]);
         }
+
+        /*
+        | DASHBOARD
+        */
+        Permission::firstOrCreate([
+            'name' => 'dashboard.view',
+            'guard_name' => 'web',
+        ]);
 
         /*
         | ROLES
@@ -137,7 +150,7 @@ class RolePermissionSeeder extends Seeder
         // SUPERADMIN = ALL
         $superAdmin->syncPermissions(Permission::all());
 
-        // ADMIN = almost all
+        // ADMIN = all except customer.delete
         $admin->syncPermissions(
             Permission::whereNotIn('name', [
                 'customer.delete',
@@ -191,6 +204,7 @@ class RolePermissionSeeder extends Seeder
                         'billing.view',
                         'collection.view',
                         'inventory.view',
+                        'dashboard.view',
                     ])
             )->get()
         );

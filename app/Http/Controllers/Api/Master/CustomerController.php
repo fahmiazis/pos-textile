@@ -34,6 +34,13 @@ class CustomerController extends Controller
             'customer_type'    => 'required|in:RETAIL,GROSIR,PROJECT',
             'default_store_id' => 'nullable|exists:stores,id',
             'is_active'        => 'boolean',
+
+            // NEW TAX FIELDS
+            'is_pkp'       => 'boolean',
+            'nik'          => 'required_if:is_pkp,1|nullable|string|max:30',
+            'sppkp'        => 'required_if:is_pkp,1|nullable|string|max:50',
+            'npwp_address' => 'required_if:is_pkp,1|nullable|string',
+            'email'        => 'nullable|email|max:100',
         ]);
 
         $customer = $this->customerService->create($validated);
@@ -67,6 +74,13 @@ class CustomerController extends Controller
             'customer_type'    => 'required|in:RETAIL,GROSIR,PROJECT',
             'default_store_id' => 'nullable|exists:stores,id',
             'is_active'        => 'boolean',
+
+            // NEW TAX FIELDS
+            'is_pkp'       => 'boolean',
+            'nik'          => 'required_if:is_pkp,1|nullable|string|max:30',
+            'sppkp'        => 'required_if:is_pkp,1|nullable|string|max:50',
+            'npwp_address' => 'required_if:is_pkp,1|nullable|string',
+            'email'        => 'nullable|email|max:100',
         ]);
 
         $customer = $this->customerService->update($id, $validated);
