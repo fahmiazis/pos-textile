@@ -15,4 +15,9 @@ class Store extends Model
         'address',
         'is_active',
     ];
+
+    public function bankAccounts()
+    {
+        return $this->hasMany(StoreBankAccount::class);
+    }
 }

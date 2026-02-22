@@ -55,6 +55,7 @@ use App\Http\Controllers\Api\Master\DriverController;
 use App\Http\Controllers\Api\Master\SalesPricingController;
 use App\Http\Controllers\Api\Master\PurchasePricingController;
 use App\Http\Controllers\Api\Master\CustomerBankAccountController;
+use App\Http\Controllers\Api\Master\StoreBankAccountController;
 
 
 Route::post('/auth/login', [AuthController::class, 'login'])
@@ -182,21 +183,30 @@ Route::middleware('api.auth')->group(function () {
         /* ====== CUSTOMER BANK ACCOUNTS ====== */
         Route::middleware('permission:customer_bank_account.view')
             ->get('/customer-bank-accounts', [CustomerBankAccountController::class, 'index']);
-
         Route::middleware('permission:customer_bank_account.view')
             ->get('/customer-bank-accounts/{id}', [CustomerBankAccountController::class, 'show']);
-
         Route::middleware('permission:customer_bank_account.create')
             ->post('/customer-bank-accounts', [CustomerBankAccountController::class, 'store']);
-
         Route::middleware('permission:customer_bank_account.update')
             ->put('/customer-bank-accounts/{id}', [CustomerBankAccountController::class, 'update']);
-
         Route::middleware('permission:customer_bank_account.delete')
             ->delete('/customer-bank-accounts/{id}', [CustomerBankAccountController::class, 'destroy']);
-
         Route::middleware('permission:customer_bank_account.restore')
-    ->put('/customer-bank-accounts/{id}/restore', [CustomerBankAccountController::class, 'restore']);
+            ->put('/customer-bank-accounts/{id}/restore', [CustomerBankAccountController::class, 'restore']);
+
+        /* ====== STORE BANK ACCOUNTS ====== */
+        Route::middleware('permission:store_bank_account.view')
+            ->get('/store-bank-accounts', [StoreBankAccountController::class, 'index']);
+        Route::middleware('permission:store_bank_account.view')
+            ->get('/store-bank-accounts/{id}', [StoreBankAccountController::class, 'show']);
+        Route::middleware('permission:store_bank_account.create')
+            ->post('/store-bank-accounts', [StoreBankAccountController::class, 'store']);
+        Route::middleware('permission:store_bank_account.update')
+            ->put('/store-bank-accounts/{id}', [StoreBankAccountController::class, 'update']);
+        Route::middleware('permission:store_bank_account.delete')
+            ->delete('/store-bank-accounts/{id}', [StoreBankAccountController::class, 'destroy']);
+        Route::middleware('permission:store_bank_account.restore')
+            ->put('/store-bank-accounts/{id}/restore', [StoreBankAccountController::class, 'restore']);
     });
 });
 

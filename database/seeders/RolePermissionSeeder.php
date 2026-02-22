@@ -19,8 +19,9 @@ class RolePermissionSeeder extends Seeder
         $masterModules = [
             'category',
             'store',
+            'store_bank_account',   
             'customer',
-            'customer_bank_account', // ✅ ditambahkan
+            'customer_bank_account',
             'supplier',
             'product',
             'discount',
