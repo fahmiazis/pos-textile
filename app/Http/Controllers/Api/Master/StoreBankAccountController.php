@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Master;
 
 use App\Http\Controllers\Controller;
+use App\Models\Master\Store;
 use App\Services\Master\StoreBankAccountService;
 use Illuminate\Http\Request;
 
@@ -89,6 +90,20 @@ class StoreBankAccountController extends Controller
             'success' => true,
             'message' => 'Store bank account restored successfully',
             'data'    => $account,
+        ]);
+    }
+
+
+    public function byStore(Store $store)
+    {
+        $accounts = $store->bankAccounts()
+            ->orderByDesc('is_primary') // supaya primary di atas
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Store bank accounts list',
+            'data' => $accounts
         ]);
     }
 }
