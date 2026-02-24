@@ -199,6 +199,8 @@ Route::middleware('api.auth')->group(function () {
             ->get('/store-bank-accounts', [StoreBankAccountController::class, 'index']);
         Route::middleware('permission:store_bank_account.view')
             ->get('/store-bank-accounts/{id}', [StoreBankAccountController::class, 'show']);
+        Route::middleware('permission:store_bank_account.view')
+            ->get('/stores/{store}/bank-accounts', [StoreBankAccountController::class, 'byStore']);
         Route::middleware('permission:store_bank_account.create')
             ->post('/store-bank-accounts', [StoreBankAccountController::class, 'store']);
         Route::middleware('permission:store_bank_account.update')
