@@ -100,7 +100,7 @@ RUN mkdir -p storage/app/public \
     bootstrap/cache
 
 # Set permissions
-RUN chown -R appuser:appuser /var/www/html && \
+RUN chown -R www-data:www-data /var/www/html && \
     chmod -R 775 storage bootstrap/cache
 
 # Expose port
