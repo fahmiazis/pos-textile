@@ -5,7 +5,7 @@ echo "Starting Laravel application..."
 
 # Wait for MySQL to be ready
 echo "Waiting for database connection..."
-until mysql -h"$DB_HOST" -P"${DB_PORT:-3306}" -u"$DB_USERNAME" -p"$DB_PASSWORD" -e "SELECT 1" > /dev/null 2>&1; do
+until mysql -h"$DB_HOST" -P"${DB_PORT:-3306}" -u"$DB_USERNAME" -p"$DB_PASSWORD" --ssl=0 -e "SELECT 1" > /dev/null 2>&1; do
     echo "Database not ready, waiting 3 seconds..."
     sleep 3
 done
