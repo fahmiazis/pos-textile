@@ -19,7 +19,6 @@ pipeline {
 
         stage('Setup ENV') {
             steps {
-                // Sesuaikan path .env di server kamu
                 sh 'cp /home/dev/pos-textile/.env .env'
             }
         }
