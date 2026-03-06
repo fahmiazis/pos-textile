@@ -1,5 +1,4 @@
 #!/bin/sh
-set -e
 
 echo "Starting Laravel application..."
 
@@ -26,21 +25,19 @@ fi
 
 # Run migrations
 echo "Running migrations..."
-php artisan migrate --force
+php artisan migrate --force || echo "Migration failed, continuing..."
 
 # Run seeders
 echo "Running seeders..."
-php artisan db:seed --force
+php artisan db:seed --force || echo "Seeder failed, continuing..."
 
 # Cache config & routes for production
 echo "Caching config..."
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-php artisan event:cache
-
-# Clear old compiled files
-php artisan optimize
+php artisan config:cache || true
+php artisan route:cache || true
+php artisan view:cache || true
+php artisan event:cache || true
+php artisan optimize || true
 
 # Create storage symlink
 php artisan storage:link || true
