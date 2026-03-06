@@ -61,13 +61,7 @@ return [
             // 'options' => extension_loaded('pdo_mysql') ? array_filter([
             //     (PHP_VERSION_ID >= 80500 ? \Pdo\Mysql::ATTR_SSL_CA : \PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
             // ]) : [],
-            'options' => extension_loaded('pdo_mysql') ? [
-                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
-                PDO::MYSQL_ATTR_SSL_KEY => null,
-                PDO::MYSQL_ATTR_SSL_CERT => null,
-                PDO::MYSQL_ATTR_SSL_CA => null,
-                PDO::MYSQL_ATTR_SSL_CIPHER => 'DEFAULT@SECLEVEL=0',
-            ] : [],
+            'options' => [],
         ],
 
         'mariadb' => [
