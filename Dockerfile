@@ -1,21 +1,4 @@
-# Stage 1: Build Vue/Vite assets
-FROM node:20-alpine AS node-builder
-
-WORKDIR /app
-
-# Copy package files
-COPY package.json package-lock.json ./
-
-# Install Node dependencies
-RUN npm ci
-
-# Copy source
-COPY . .
-
-# Build Vue/Vite assets
-RUN npm run build
-
-# Stage 2: PHP dependencies
+# Stage 1: PHP dependencies (harus duluan karena node-builder butuh vendor/ziggy)
 FROM composer:2.7 AS composer-builder
 
 WORKDIR /app
@@ -31,6 +14,26 @@ RUN composer install \
     --no-scripts \
     --prefer-dist \
     --optimize-autoloader
+
+# Stage 2: Build Vue/Vite assets
+FROM node:20-alpine AS node-builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json ./
+
+# Install Node dependencies
+RUN npm ci
+
+# Copy source
+COPY . .
+
+# Copy vendor dari composer-builder (Ziggy butuh vendor saat build)
+COPY --from=composer-builder /app/vendor ./vendor
+
+# Build Vue/Vite assets
+RUN npm run build
 
 # Stage 3: Runtime
 FROM php:8.2-fpm-alpine
