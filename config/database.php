@@ -63,6 +63,10 @@ return [
             // ]) : [],
             'options' => extension_loaded('pdo_mysql') ? [
                 PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
+                PDO::MYSQL_ATTR_SSL_KEY => null,
+                PDO::MYSQL_ATTR_SSL_CERT => null,
+                PDO::MYSQL_ATTR_SSL_CA => null,
+                PDO::MYSQL_ATTR_SSL_CIPHER => 'DEFAULT@SECLEVEL=0',
             ] : [],
         ],
 
