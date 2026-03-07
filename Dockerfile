@@ -32,6 +32,10 @@ COPY . .
 # Copy vendor dari composer-builder (Ziggy butuh vendor saat build)
 COPY --from=composer-builder /app/vendor ./vendor
 
+# Pass VITE env vars at build time
+ARG VITE_APP_BASE_PATH=/pos-textile
+ENV VITE_APP_BASE_PATH=$VITE_APP_BASE_PATH
+
 # Build Vue/Vite assets
 RUN npm run build
 
