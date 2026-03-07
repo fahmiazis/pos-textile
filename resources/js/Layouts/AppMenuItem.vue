@@ -3,6 +3,8 @@ import { useLayout } from '@/Layouts/composables/layout';
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
+const basePath = import.meta.env.VITE_APP_BASE_PATH || '';
+
 const { layoutState, isDesktop } = useLayout();
 const { url, component } = usePage() // Inertia page info
 
@@ -66,7 +68,7 @@ const onMouseEnter = () => {
             <span class="layout-menuitem-text">{{ item.label }}</span>
             <i class="pi pi-fw pi-angle-down layout-submenu-toggler" v-if="item.items" />
         </a>
-        <Link v-if="item.to && !item.items && item.visible !== false" @click="itemClick($event, item)" exactActiveClass="active-route" :class="item.class" tabindex="0" :to="item.to" @mouseenter="onMouseEnter">
+        <Link v-if="item.to && !item.items && item.visible !== false" @click="itemClick($event, item)" exactActiveClass="active-route" :class="item.class" tabindex="0" :to="basePath + item.to" @mouseenter="onMouseEnter">
             <i :class="item.icon" class="layout-menuitem-icon" />
             <span class="layout-menuitem-text">{{ item.label }}</span>
             <i class="pi pi-fw pi-angle-down layout-submenu-toggler" v-if="item.items" />
