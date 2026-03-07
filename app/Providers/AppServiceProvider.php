@@ -29,5 +29,10 @@ class AppServiceProvider extends ServiceProvider
         if (str_starts_with(config('app.url'), 'https')) {
             \URL::forceScheme('https');
         }
+
+        if ($prefix = request()->server('HTTP_X_FORWARDED_PREFIX')) {
+            \URL::forceRootUrl(config('app.url'));
+            app('router')->prefix($prefix);
+        }
     }
 }
